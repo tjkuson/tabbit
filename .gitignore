@@ -15,3 +15,6 @@ wheels/
 .metacov
 .metacov.*
 *.py,cover
+
+# Tabbit
+*.log.jsonl
