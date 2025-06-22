@@ -16,6 +16,8 @@ classifiers = [
 dependencies = [
     "fastapi[standard]~=0.115.13",
     "httpx~=0.28.1",
+    "pydantic>=2.11.7",
+    "pydantic-settings>=2.10.0",
 ]
 
 [build-system]
@@ -48,6 +50,9 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_return_any = true
 warn_unreachable = true
+plugins = [
+    "pydantic.mypy",
+]
 
 [tool.pytest.ini_options]
 addopts = [
