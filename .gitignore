@@ -17,4 +17,5 @@ wheels/
 *.py,cover
 
 # Tabbit
+*.db
 *.log.jsonl

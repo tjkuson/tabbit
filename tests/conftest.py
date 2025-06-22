@@ -5,13 +5,44 @@ from collections.abc import AsyncGenerator
 import httpx
 import pytest_asyncio
 from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.asgi import setup_app
+from tabbit.database.models import Base
+from tabbit.database.session import SessionManager
+from tabbit.database.session import session_manager
+
+
+def _session_manager() -> SessionManager:
+    return SessionManager(
+        database_url="sqlite+aiosqlite:///:memory:",
+    )
+
+
+@pytest_asyncio.fixture(loop_scope="function", name="session")
+async def _session() -> AsyncGenerator[AsyncSession]:
+    """Yield an in-memory SQLite database session.
+
+    Initializes a database with no data.
+    """
+    session_manager = _session_manager()
+    async with session_manager.engine.connect() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        async with session_manager.sessionmaker() as session:
+            yield session
 
 
 @pytest_asyncio.fixture(loop_scope="function", name="app")
 async def _app() -> AsyncGenerator[FastAPI]:
+    # Initialize the test database and application.
+    test_session_manager = _session_manager()
+    async with test_session_manager.engine.connect() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     app = setup_app()
+
+    # Monkey-patch our in-memory test database.
+    app.dependency_overrides[session_manager.session] = test_session_manager.session
+
     yield app
 
 

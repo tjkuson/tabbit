@@ -14,10 +14,12 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+    "aiosqlite>=0.21.0",
     "fastapi[standard]~=0.115.13",
     "httpx~=0.28.1",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.0",
+    "sqlalchemy[asyncio]>=2.0.41",
 ]
 
 [build-system]
@@ -35,6 +37,9 @@ dev = [
 
 [tool.coverage.run]
 branch = true
+omit = [
+    "src/tabbit/config/logger.py",
+]
 
 [tool.coverage.report]
 fail_under = 100

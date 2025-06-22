@@ -11,6 +11,7 @@ from pydantic_settings import SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="tabbit_", env_file=".env")
 
+    database_url: str = "sqlite+aiosqlite:///tabbit.db"
     log_filename: Path = Path("tabbit.log.jsonl")
 
 
