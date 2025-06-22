@@ -110,6 +110,9 @@ select = [
     "RUF",
 ]
 
+[tool.ruff.lint.flake8-import-conventions.extend-aliases]
+datetime = "dt"  # https://adamj.eu/tech/2019/09/12/how-i-import-pythons-datetime-module/
+
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
 
