@@ -4,6 +4,7 @@ import pytest
 from pydantic import BaseModel
 
 from tabbit.database import models
+from tabbit.schemas.team import Team
 from tabbit.schemas.tournament import Tournament
 
 
@@ -32,6 +33,34 @@ from tabbit.schemas.tournament import Tournament
                 id=1,
                 name="World Universities Debating Championship 2025",
                 abbreviation="WUDC 2025",
+            ),
+        ),
+        (
+            models.Team(
+                id=1,
+                tournament_id=42,
+                name="Manchester Debating Union A",
+                abbreviation=None,
+            ),
+            Team(
+                id=1,
+                tournament_id=42,
+                name="Manchester Debating Union A",
+                abbreviation=None,
+            ),
+        ),
+        (
+            models.Team(
+                id=1,
+                tournament_id=42,
+                name="Manchester Debating Union A",
+                abbreviation="Manchester A",
+            ),
+            Team(
+                id=1,
+                tournament_id=42,
+                name="Manchester Debating Union A",
+                abbreviation="Manchester A",
             ),
         ),
     ],

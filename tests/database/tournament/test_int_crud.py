@@ -52,7 +52,7 @@ async def test_tournament_update(
     assert tournament.name == NAME
     assert tournament.abbreviation == abbreviation
 
-    # Read (to check the update persists)
+    # Read (to check the update persists).
     tournament = await crud.get_tournament(session, tournament_id)
     assert tournament is not None
     assert tournament.name == NAME
