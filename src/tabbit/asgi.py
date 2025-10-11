@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from fastapi import FastAPI
 
 from tabbit.http.api.root import api_router

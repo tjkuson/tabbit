@@ -5,8 +5,6 @@ database schema of Tabbit. Each model corresponds to a database table
 and defines its columns, relationships, and behaviour.
 """
 
-from __future__ import annotations
-
 from typing import final
 
 from sqlalchemy import ForeignKey
