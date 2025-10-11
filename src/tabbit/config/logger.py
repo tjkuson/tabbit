@@ -1,7 +1,5 @@
 """Configuration for the root logger."""
 
-from __future__ import annotations
-
 import atexit
 import datetime as dt
 import functools

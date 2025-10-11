@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 # https://fastapi.tiangolo.com/advanced/additional-responses/
 type APIRouterResponses = dict[str | int, dict[str, object]]
 
