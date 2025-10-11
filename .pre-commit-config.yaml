@@ -17,7 +17,7 @@ repos:
       - id: sort-simple-yaml
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.2
+    rev: v0.14.0
     hooks:
       - id: ruff-format
       - id: ruff
@@ -29,11 +29,11 @@ repos:
     hooks:
       - id: validate-pyproject
   - repo: https://github.com/adhtruong/mirrors-typos
-    rev: v1.36.3
+    rev: v1.38.1
     hooks:
       - id: typos
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.7
+    rev: v1.7.8
     hooks:
       - id: actionlint
   - repo: https://github.com/sirwart/ripsecrets

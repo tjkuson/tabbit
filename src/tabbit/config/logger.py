@@ -84,7 +84,7 @@ class JSONFormatter(logging.Formatter):
         return json.dumps(msg, default=str)
 
 
-logging_config: Final = {
+_logging_config: Final = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
@@ -136,7 +136,7 @@ logging_config: Final = {
 }
 
 
-@functools.lru_cache(maxsize=1)
+@functools.cache
 def setup_logging() -> None:
     """Setup and configure application-level logging.
 
@@ -160,7 +160,7 @@ def setup_logging() -> None:
     if not settings.log_filename.exists():
         settings.log_filename.touch()
 
-    logging.config.dictConfig(logging_config)
+    logging.config.dictConfig(_logging_config)
 
     queue_handler = logging.getHandlerByName("queue_handler")
     if (

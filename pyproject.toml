@@ -6,20 +6,20 @@ readme = "README.md"
 authors = [
     { name = "Tom Kuson", email = "mail@tjkuson.me" }
 ]
-requires-python = "~=3.13.0"
+requires-python = "~=3.14.0"
 classifiers = [
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Typing :: Typed",
 ]
 dependencies = [
     "aiosqlite>=0.21.0",
-    "fastapi[standard]~=0.117.1",
+    "fastapi[standard]~=0.118.3",
     "httpx~=0.28.1",
-    "pydantic>=2.11.8",
-    "pydantic-settings>=2.10.0",
-    "sqlalchemy[asyncio]>=2.0.42",
+    "pydantic~=2.12",
+    "pydantic-settings~=2.11",
+    "sqlalchemy[asyncio]~=2.0",
 ]
 
 [build-system]
@@ -28,15 +28,16 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "coverage==7.6.12",  # TODO: Release pin with 3.14 for sys.monitoring
-    "mypy>=1.18.1",
-    "pytest~=8.4.2",
-    "pytest-asyncio~=1.2.0",
-    "pytest-randomly~=4.0.1",
+    "coverage~=7.10",
+    "mypy~=1.18",
+    "pytest~=8.4",
+    "pytest-asyncio~=1.2",
+    "pytest-randomly~=4.0",
 ]
 
 [tool.coverage.run]
 branch = true
+core = "sysmon"
 omit = [
     "src/tabbit/config/logger.py",
 ]
