@@ -36,7 +36,7 @@ least once during a full run of the test suite.
 To measure coverage with [coverage.py], run
 
 ```shell
-COVERAGE_CORE=sysmon uv run --frozen coverage run -m pytest
+uv run --frozen coverage run -m pytest
 ```
 
 and then review the report with

@@ -17,11 +17,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
+        uses: astral-sh/setup-uv@v7
       - name: Install pre-commit
         run: uv tool install pre-commit --with pre-commit-uv
       - name: Cache pre-commit
@@ -46,11 +44,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
+        uses: astral-sh/setup-uv@v7
       - name: Sync environment
         run: |
           uv sync --locked
@@ -64,17 +60,13 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
+        uses: astral-sh/setup-uv@v7
       - name: Sync environment
         run: |
           uv sync --locked
       - name: Run tests
-        env:
-          COVERAGE_CORE: sysmon
         run: |
           uv run --locked \
           coverage run --module \
