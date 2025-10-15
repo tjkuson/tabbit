@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Final
 from typing import final
 
 from pydantic_settings import BaseSettings
@@ -13,4 +14,4 @@ class Settings(BaseSettings):
     log_filename: Path = Path("tabbit.log.jsonl")
 
 
-settings = Settings()
+settings: Final = Settings()

@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+from typing import Final
 from typing import Self
 from typing import final
 
@@ -62,4 +63,4 @@ class SessionManager:
             yield session
 
 
-session_manager = SessionManager.from_settings(settings)
+session_manager: Final = SessionManager.from_settings(settings)

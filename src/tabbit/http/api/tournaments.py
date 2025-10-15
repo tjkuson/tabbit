@@ -1,6 +1,7 @@
 import http
 import logging
 from typing import Annotated
+from typing import Final
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -22,7 +23,7 @@ from tabbit.schemas.tournament import TournamentPatch
 
 logger = logging.getLogger(__name__)
 
-tournaments_router = APIRouter(
+tournaments_router: Final = APIRouter(
     prefix="/tournaments",
     tags=[Tags.TOURNAMENT],
 )

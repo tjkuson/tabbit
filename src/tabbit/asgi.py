@@ -1,3 +1,5 @@
+from typing import Final
+
 from fastapi import FastAPI
 
 from tabbit.http.api.root import api_router
@@ -16,4 +18,4 @@ def setup_app() -> FastAPI:
     return app
 
 
-app = setup_app()
+app: Final = setup_app()
