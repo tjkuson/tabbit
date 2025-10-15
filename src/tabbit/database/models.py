@@ -44,3 +44,18 @@ class Team(Base):
     abbreviation: Mapped[str | None]
 
     tournament: Mapped[Tournament] = relationship(back_populates="teams")
+    speakers: Mapped[list[Speaker]] = relationship(
+        back_populates="team",
+        cascade="all, delete-orphan",
+    )
+
+
+@final
+class Speaker(Base):
+    __tablename__ = TableName.SPEAKER
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    team_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.TEAM}.id"))
+    name: Mapped[str]
+
+    team: Mapped[Team] = relationship(back_populates="speakers")
