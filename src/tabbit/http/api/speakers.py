@@ -1,6 +1,7 @@
 import http
 import logging
 from typing import Annotated
+from typing import Final
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -22,7 +23,7 @@ from tabbit.schemas.speaker import SpeakerPatch
 
 logger = logging.getLogger(__name__)
 
-speakers_router = APIRouter(
+speakers_router: Final = APIRouter(
     prefix="/speaker",
     tags=[Tags.SPEAKER],
 )

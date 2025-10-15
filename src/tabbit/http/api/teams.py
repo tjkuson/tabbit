@@ -1,6 +1,7 @@
 import http
 import logging
 from typing import Annotated
+from typing import Final
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -22,7 +23,7 @@ from tabbit.schemas.team import TeamPatch
 
 logger = logging.getLogger(__name__)
 
-teams_router = APIRouter(
+teams_router: Final = APIRouter(
     prefix="/team",
     tags=[Tags.TEAM],
 )
