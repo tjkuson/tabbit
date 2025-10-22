@@ -13,6 +13,7 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
+from tabbit.database.enums import RoundStatus
 from tabbit.database.enums import TableName
 
 
@@ -29,6 +30,10 @@ class Tournament(Base):
     abbreviation: Mapped[str | None]
 
     teams: Mapped[list[Team]] = relationship(
+        back_populates="tournament",
+        cascade="all, delete-orphan",
+    )
+    rounds: Mapped[list[Round]] = relationship(
         back_populates="tournament",
         cascade="all, delete-orphan",
     )
@@ -59,3 +64,17 @@ class Speaker(Base):
     name: Mapped[str]
 
     team: Mapped[Team] = relationship(back_populates="speakers")
+
+
+@final
+class Round(Base):
+    __tablename__ = TableName.ROUND
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    tournament_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.TOURNAMENT}.id"))
+    name: Mapped[str]
+    abbreviation: Mapped[str | None]
+    sequence: Mapped[int]
+    status: Mapped[RoundStatus]
+
+    tournament: Mapped[Tournament] = relationship(back_populates="rounds")
