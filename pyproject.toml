@@ -14,8 +14,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-    "aiosqlite>=0.21.0",
-    "fastapi[standard]~=0.118.3",
+    "aiosqlite~=0.21.0",
+    "fastapi[standard]~=0.119.1",
     "httpx~=0.28.1",
     "pydantic~=2.12",
     "pydantic-settings~=2.11",
@@ -28,7 +28,7 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "coverage~=7.10",
+    "coverage~=7.11",
     "mypy~=1.18",
     "pytest~=8.4",
     "pytest-asyncio~=1.2",
