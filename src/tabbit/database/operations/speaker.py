@@ -2,10 +2,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database import models
-from tabbit.schemas.speaker import ListSpeakersQuery
-from tabbit.schemas.speaker import Speaker
-from tabbit.schemas.speaker import SpeakerCreate
-from tabbit.schemas.speaker import SpeakerPatch
+from tabbit.database.schemas.speaker import ListSpeakersQuery
+from tabbit.database.schemas.speaker import Speaker
+from tabbit.database.schemas.speaker import SpeakerCreate
 
 
 async def create_speaker(
@@ -75,14 +74,14 @@ async def delete_speaker(
 async def patch_speaker(
     session: AsyncSession,
     speaker_id: int,
-    speaker_patch: SpeakerPatch,
+    name: str | None = None,
 ) -> Speaker | None:
     """Patch a speaker.
 
     Args:
         session: The database session to use for the operation.
         speaker_id: The ID of the speaker to patch.
-        speaker_patch: The partial speaker data to apply.
+        name: The new name for the speaker, if provided.
 
     Returns:
         The updated speaker, None if no speaker was found with the given ID.
@@ -91,9 +90,8 @@ async def patch_speaker(
     if speaker_model is None:
         return None
 
-    update_data = speaker_patch.model_dump(exclude_unset=True)
-    for key, val in update_data.items():
-        setattr(speaker_model, key, val)
+    if name is not None:
+        speaker_model.name = name
     await session.commit()
     return Speaker.model_validate(speaker_model)
 

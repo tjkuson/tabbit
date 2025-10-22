@@ -2,8 +2,8 @@ import pytest
 from pydantic import BaseModel
 
 from tabbit.database import models
-from tabbit.schemas.team import Team
-from tabbit.schemas.tournament import Tournament
+from tabbit.http.api.schemas.team import Team
+from tabbit.http.api.schemas.tournament import Tournament
 
 
 @pytest.mark.parametrize(

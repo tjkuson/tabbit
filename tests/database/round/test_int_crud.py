@@ -9,10 +9,10 @@ from tabbit.database.operations.round import list_rounds
 from tabbit.database.operations.round import patch_round
 from tabbit.database.operations.tournament import create_tournament
 from tabbit.database.operations.tournament import delete_tournament
-from tabbit.schemas.round import ListRoundsQuery
-from tabbit.schemas.round import RoundCreate
-from tabbit.schemas.round import RoundPatch
-from tabbit.schemas.tournament import TournamentCreate
+from tabbit.database.schemas.round import ListRoundsQuery
+from tabbit.database.schemas.round import RoundCreate
+from tabbit.database.schemas.round import RoundPatch
+from tabbit.database.schemas.tournament import TournamentCreate
 
 TOURNAMENT_NAME = "European Universities Debating Championships 2025"
 TOURNAMENT_ABBREVIATION = "EUDC 2025"

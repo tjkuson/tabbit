@@ -2,10 +2,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database import models
-from tabbit.schemas.team import ListTeamsQuery
-from tabbit.schemas.team import Team
-from tabbit.schemas.team import TeamCreate
-from tabbit.schemas.team import TeamPatch
+from tabbit.database.schemas.team import ListTeamsQuery
+from tabbit.database.schemas.team import Team
+from tabbit.database.schemas.team import TeamCreate
+from tabbit.database.schemas.team import TeamPatch
 
 
 async def create_team(

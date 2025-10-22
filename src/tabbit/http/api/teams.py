@@ -12,14 +12,15 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import team as crud
+from tabbit.database.schemas import team as db_schemas
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.schemas.team import ListTeamsQuery
+from tabbit.http.api.schemas.team import Team
+from tabbit.http.api.schemas.team import TeamCreate
+from tabbit.http.api.schemas.team import TeamID
+from tabbit.http.api.schemas.team import TeamPatch
 from tabbit.http.api.util import not_found_response
-from tabbit.schemas.team import ListTeamsQuery
-from tabbit.schemas.team import Team
-from tabbit.schemas.team import TeamCreate
-from tabbit.schemas.team import TeamID
-from tabbit.schemas.team import TeamPatch
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,8 @@ async def create_team(
 
     Returns the team ID upon creation.
     """
-    team_id = TeamID(id=await crud.create_team(session, team))
+    db_team = db_schemas.TeamCreate(**team.model_dump())
+    team_id = TeamID(id=await crud.create_team(session, db_team))
     logger.info("Created team.", extra={"team_id": team_id})
     return JSONResponse(content=jsonable_encoder(team_id))
 
@@ -59,15 +61,16 @@ async def get_team(
 
     Returns the team if found; otherwise, 404 Not Found.
     """
-    team = await crud.get_team(session, team_id)
+    db_team = await crud.get_team(session, team_id)
 
-    if team is None:
+    if db_team is None:
         logger.info("Team not found.", extra={"team_id": team_id})
         return JSONResponse(
             status_code=http.HTTPStatus.NOT_FOUND,
             content={"message": "Team not found."},
         )
     else:
+        team = Team.model_validate(db_team)
         logger.info("Got team by ID.", extra={"team_id": team_id})
         return JSONResponse(content=jsonable_encoder(team))
 
@@ -112,9 +115,11 @@ async def patch_team(
 
     Returns the updated team.
     """
-    team = await crud.patch_team(session, team_id, team_patch)
+    patch_data = team_patch.model_dump(exclude_unset=True)
+    db_patch = db_schemas.TeamPatch(**patch_data)
+    db_team = await crud.patch_team(session, team_id, db_patch)
 
-    if team is None:
+    if db_team is None:
         logger.info(
             "Team not found.",
             extra={"team_patch": team_patch},
@@ -124,6 +129,7 @@ async def patch_team(
             content={"message": "Team not found."},
         )
     else:
+        team = Team.model_validate(db_team)
         logger.info(
             "Patched team.",
             extra={"team_patch": team_patch},
@@ -143,6 +149,8 @@ async def list_teams(
 
     Returns an empty list if none are found.
     """
-    teams = await crud.list_teams(session, query)
+    db_query = db_schemas.ListTeamsQuery(**query.model_dump())
+    db_teams = await crud.list_teams(session, db_query)
+    teams = [Team.model_validate(db_team) for db_team in db_teams]
     logger.info("Listed teams.", extra={"query": query})
     return JSONResponse(content=jsonable_encoder(teams))

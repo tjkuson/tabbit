@@ -5,10 +5,10 @@ from tabbit.database.operations import tournament as crud
 from tabbit.database.operations.tournament import delete_tournament
 from tabbit.database.operations.tournament import get_tournament
 from tabbit.database.operations.tournament import patch_tournament
-from tabbit.schemas.tournament import ListTournamentsQuery
-from tabbit.schemas.tournament import Tournament
-from tabbit.schemas.tournament import TournamentCreate
-from tabbit.schemas.tournament import TournamentPatch
+from tabbit.database.schemas.tournament import ListTournamentsQuery
+from tabbit.database.schemas.tournament import Tournament
+from tabbit.database.schemas.tournament import TournamentCreate
+from tabbit.database.schemas.tournament import TournamentPatch
 
 NAME = "European Universities Debating Championships 2025"
 ABBREVIATION = "EUDC 2025"
@@ -44,7 +44,7 @@ async def test_tournament_update(
 ) -> None:
     tournament_id = await _setup_data(session)
 
-    patch = TournamentPatch(id=tournament_id, abbreviation=abbreviation)
+    patch = TournamentPatch(abbreviation=abbreviation)
     tournament = await patch_tournament(session, tournament_id, patch)
     assert tournament is not None
     assert tournament.name == NAME
@@ -82,7 +82,7 @@ async def test_tournament_list(session: AsyncSession) -> None:
     tournament_name = "Manchester IV"
     tournament_create = TournamentCreate(name=tournament_name)
     tournament_id = await crud.create_tournament(session, tournament_create)
-    tournament = Tournament(id=tournament_id, name=tournament_name)
+    tournament = Tournament(id=tournament_id, name=tournament_name, abbreviation=None)
 
     result = await crud.list_tournaments(
         session,

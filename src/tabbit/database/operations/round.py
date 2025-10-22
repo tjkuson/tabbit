@@ -2,10 +2,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database import models
-from tabbit.schemas.round import ListRoundsQuery
-from tabbit.schemas.round import Round
-from tabbit.schemas.round import RoundCreate
-from tabbit.schemas.round import RoundPatch
+from tabbit.database.schemas.round import ListRoundsQuery
+from tabbit.database.schemas.round import Round
+from tabbit.database.schemas.round import RoundCreate
+from tabbit.database.schemas.round import RoundPatch
 
 
 async def create_round(

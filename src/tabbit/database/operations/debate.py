@@ -2,28 +2,24 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database import models
-from tabbit.schemas.debate import Debate
-from tabbit.schemas.debate import DebateCreate
-from tabbit.schemas.debate import DebatePatch
-from tabbit.schemas.debate import ListDebatesQuery
+from tabbit.database.schemas.debate import Debate
+from tabbit.database.schemas.debate import ListDebatesQuery
 
 
 async def create_debate(
     session: AsyncSession,
-    debate_create: DebateCreate,
+    round_id: int,
 ) -> int:
     """Create a debate in the database.
 
     Args:
         session: The database session to use for the operation.
-        debate_create: The debate creation data.
+        round_id: The ID of the round this debate belongs to.
 
     Returns:
         The ID of the created debate.
     """
-    debate_model = models.Debate(
-        round_id=debate_create.round_id,
-    )
+    debate_model = models.Debate(round_id=round_id)
     session.add(debate_model)
     await session.commit()
     return debate_model.id
@@ -74,14 +70,14 @@ async def delete_debate(
 async def patch_debate(
     session: AsyncSession,
     debate_id: int,
-    debate_patch: DebatePatch,
+    round_id: int | None = None,
 ) -> Debate | None:
     """Patch a debate.
 
     Args:
         session: The database session to use for the operation.
         debate_id: The ID of the debate to patch.
-        debate_patch: The partial debate data to apply.
+        round_id: The new round ID to assign, if provided.
 
     Returns:
         The updated debate, None if no debate was found with the given ID.
@@ -90,9 +86,8 @@ async def patch_debate(
     if debate_model is None:
         return None
 
-    update_data = debate_patch.model_dump(exclude_unset=True)
-    for key, val in update_data.items():
-        setattr(debate_model, key, val)
+    if round_id is not None:
+        debate_model.round_id = round_id
     await session.commit()
     return Debate.model_validate(debate_model)
 
