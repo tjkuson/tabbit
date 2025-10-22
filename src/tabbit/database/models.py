@@ -78,3 +78,17 @@ class Round(Base):
     status: Mapped[RoundStatus]
 
     tournament: Mapped[Tournament] = relationship(back_populates="rounds")
+    debates: Mapped[list[Debate]] = relationship(
+        back_populates="round",
+        cascade="all, delete-orphan",
+    )
+
+
+@final
+class Debate(Base):
+    __tablename__ = TableName.DEBATE
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    round_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.ROUND}.id"))
+
+    round: Mapped[Round] = relationship(back_populates="debates")
