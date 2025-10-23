@@ -70,8 +70,6 @@ overview may be helpful.
   session management.
 - `tabbit.exceptions`: Tabbit exception types.
 - `tabbit.http`: manages the user-facing API.
-- `tabbit.schemas`: describes and manages the intermediary data between the API
-  and database.
 
 [uv]: https://docs.astral.sh/uv/
 [pre-commit]: https://pre-commit.com/
