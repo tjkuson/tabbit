@@ -29,6 +29,10 @@ class Tournament(Base):
     name: Mapped[str]
     abbreviation: Mapped[str | None]
 
+    judges: Mapped[list[Judge]] = relationship(
+        back_populates="tournament",
+        cascade="all, delete-orphan",
+    )
     teams: Mapped[list[Team]] = relationship(
         back_populates="tournament",
         cascade="all, delete-orphan",
@@ -64,6 +68,17 @@ class Speaker(Base):
     name: Mapped[str]
 
     team: Mapped[Team] = relationship(back_populates="speakers")
+
+
+@final
+class Judge(Base):
+    __tablename__ = TableName.JUDGE
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    tournament_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.TOURNAMENT}.id"))
+    name: Mapped[str]
+
+    tournament: Mapped[Tournament] = relationship(back_populates="judges")
 
 
 @final
