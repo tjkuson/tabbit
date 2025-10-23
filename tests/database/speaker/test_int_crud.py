@@ -9,11 +9,10 @@ from tabbit.database.operations.speaker import patch_speaker
 from tabbit.database.operations.team import create_team
 from tabbit.database.operations.team import delete_team
 from tabbit.database.operations.tournament import create_tournament
-from tabbit.schemas.speaker import ListSpeakersQuery
-from tabbit.schemas.speaker import SpeakerCreate
-from tabbit.schemas.speaker import SpeakerPatch
-from tabbit.schemas.team import TeamCreate
-from tabbit.schemas.tournament import TournamentCreate
+from tabbit.database.schemas.speaker import ListSpeakersQuery
+from tabbit.database.schemas.speaker import SpeakerCreate
+from tabbit.database.schemas.team import TeamCreate
+from tabbit.database.schemas.tournament import TournamentCreate
 
 TOURNAMENT_NAME = "European Universities Debating Championships 2025"
 TOURNAMENT_ABBREVIATION = "EUDC 2025"
@@ -76,8 +75,7 @@ async def test_speaker_update(session: AsyncSession) -> None:
     _tournament_id, team_id, speaker_id = await _setup_data(session)
 
     new_name = "John Smith"
-    patch = SpeakerPatch(name=new_name)
-    speaker = await patch_speaker(session, speaker_id, patch)
+    speaker = await patch_speaker(session, speaker_id, name=new_name)
     assert speaker is not None
     assert speaker.name == new_name
     assert speaker.id == speaker_id
@@ -279,10 +277,15 @@ async def test_speaker_delete_missing(session: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_speaker_patch_missing(session: AsyncSession) -> None:
-    patch = SpeakerPatch(name="Missing")
-    speaker = await patch_speaker(
-        session,
-        speaker_id=1,
-        speaker_patch=patch,
-    )
+    speaker = await patch_speaker(session, speaker_id=1, name="Missing")
     assert speaker is None
+
+
+@pytest.mark.asyncio
+async def test_speaker_patch_no_changes(session: AsyncSession) -> None:
+    _tournament_id, team_id, speaker_id = await _setup_data(session)
+    speaker = await patch_speaker(session, speaker_id, name=None)
+    assert speaker is not None
+    assert speaker.name == SPEAKER_NAME
+    assert speaker.id == speaker_id
+    assert speaker.team_id == team_id

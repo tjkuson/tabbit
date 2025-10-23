@@ -2,10 +2,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database import models
-from tabbit.schemas.tournament import ListTournamentsQuery
-from tabbit.schemas.tournament import Tournament
-from tabbit.schemas.tournament import TournamentCreate
-from tabbit.schemas.tournament import TournamentPatch
+from tabbit.database.schemas.tournament import ListTournamentsQuery
+from tabbit.database.schemas.tournament import Tournament
+from tabbit.database.schemas.tournament import TournamentCreate
+from tabbit.database.schemas.tournament import TournamentPatch
 
 
 async def create_tournament(

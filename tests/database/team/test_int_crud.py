@@ -8,10 +8,10 @@ from tabbit.database.operations.team import list_teams
 from tabbit.database.operations.team import patch_team
 from tabbit.database.operations.tournament import create_tournament
 from tabbit.database.operations.tournament import delete_tournament
-from tabbit.schemas.team import ListTeamsQuery
-from tabbit.schemas.team import TeamCreate
-from tabbit.schemas.team import TeamPatch
-from tabbit.schemas.tournament import TournamentCreate
+from tabbit.database.schemas.team import ListTeamsQuery
+from tabbit.database.schemas.team import TeamCreate
+from tabbit.database.schemas.team import TeamPatch
+from tabbit.database.schemas.tournament import TournamentCreate
 
 TOURNAMENT_NAME = "European Universities Debating Championships 2025"
 TOURNAMENT_ABBREVIATION = "EUDC 2025"

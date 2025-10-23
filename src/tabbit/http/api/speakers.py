@@ -12,14 +12,16 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import speaker as crud
+from tabbit.database.schemas.speaker import ListSpeakersQuery as DBListSpeakersQuery
+from tabbit.database.schemas.speaker import SpeakerCreate as DBSpeakerCreate
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.schemas.speaker import ListSpeakersQuery
+from tabbit.http.api.schemas.speaker import Speaker
+from tabbit.http.api.schemas.speaker import SpeakerCreate
+from tabbit.http.api.schemas.speaker import SpeakerID
+from tabbit.http.api.schemas.speaker import SpeakerPatch
 from tabbit.http.api.util import not_found_response
-from tabbit.schemas.speaker import ListSpeakersQuery
-from tabbit.schemas.speaker import Speaker
-from tabbit.schemas.speaker import SpeakerCreate
-from tabbit.schemas.speaker import SpeakerID
-from tabbit.schemas.speaker import SpeakerPatch
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,8 @@ async def create_speaker(
 
     Returns the speaker ID upon creation.
     """
-    speaker_id = SpeakerID(id=await crud.create_speaker(session, speaker))
+    db_speaker = DBSpeakerCreate(**speaker.model_dump())
+    speaker_id = SpeakerID(id=await crud.create_speaker(session, db_speaker))
     logger.info("Created speaker.", extra={"speaker_id": speaker_id})
     return JSONResponse(content=jsonable_encoder(speaker_id))
 
@@ -59,15 +62,16 @@ async def get_speaker(
 
     Returns the speaker if found; otherwise, 404 Not Found.
     """
-    speaker = await crud.get_speaker(session, speaker_id)
+    db_speaker = await crud.get_speaker(session, speaker_id)
 
-    if speaker is None:
+    if db_speaker is None:
         logger.info("Speaker not found.", extra={"speaker_id": speaker_id})
         return JSONResponse(
             status_code=http.HTTPStatus.NOT_FOUND,
             content={"message": "Speaker not found."},
         )
     else:
+        speaker = Speaker.model_validate(db_speaker)
         logger.info("Got speaker by ID.", extra={"speaker_id": speaker_id})
         return JSONResponse(content=jsonable_encoder(speaker))
 
@@ -112,9 +116,9 @@ async def patch_speaker(
 
     Returns the updated speaker.
     """
-    speaker = await crud.patch_speaker(session, speaker_id, speaker_patch)
+    db_speaker = await crud.patch_speaker(session, speaker_id, name=speaker_patch.name)
 
-    if speaker is None:
+    if db_speaker is None:
         logger.info(
             "Speaker not found.",
             extra={"speaker_patch": speaker_patch},
@@ -124,6 +128,7 @@ async def patch_speaker(
             content={"message": "Speaker not found."},
         )
     else:
+        speaker = Speaker.model_validate(db_speaker)
         logger.info(
             "Patched speaker.",
             extra={"speaker_patch": speaker_patch},
@@ -143,6 +148,8 @@ async def list_speakers(
 
     Returns an empty list if none are found.
     """
-    speakers = await crud.list_speakers(session, query)
+    db_query = DBListSpeakersQuery(**query.model_dump())
+    db_speakers = await crud.list_speakers(session, db_query)
+    speakers = [Speaker.model_validate(db_speaker) for db_speaker in db_speakers]
     logger.info("Listed speakers.", extra={"query": query})
     return JSONResponse(content=jsonable_encoder(speakers))

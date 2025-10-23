@@ -12,14 +12,15 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import debate as crud
+from tabbit.database.schemas.debate import ListDebatesQuery as DBListDebatesQuery
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.schemas.debate import Debate
+from tabbit.http.api.schemas.debate import DebateCreate
+from tabbit.http.api.schemas.debate import DebateID
+from tabbit.http.api.schemas.debate import DebatePatch
+from tabbit.http.api.schemas.debate import ListDebatesQuery
 from tabbit.http.api.util import not_found_response
-from tabbit.schemas.debate import Debate
-from tabbit.schemas.debate import DebateCreate
-from tabbit.schemas.debate import DebateID
-from tabbit.schemas.debate import DebatePatch
-from tabbit.schemas.debate import ListDebatesQuery
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ async def create_debate(
 
     Returns the debate ID upon creation.
     """
-    debate_id = DebateID(id=await crud.create_debate(session, debate))
+    debate_id = DebateID(id=await crud.create_debate(session, debate.round_id))
     logger.info("Created debate.", extra={"debate_id": debate_id})
     return JSONResponse(content=jsonable_encoder(debate_id))
 
@@ -59,15 +60,16 @@ async def get_debate(
 
     Returns the debate if found; otherwise, 404 Not Found.
     """
-    debate = await crud.get_debate(session, debate_id)
+    db_debate = await crud.get_debate(session, debate_id)
 
-    if debate is None:
+    if db_debate is None:
         logger.info("Debate not found.", extra={"debate_id": debate_id})
         return JSONResponse(
             status_code=http.HTTPStatus.NOT_FOUND,
             content={"message": "Debate not found."},
         )
     else:
+        debate = Debate.model_validate(db_debate)
         logger.info("Got debate by ID.", extra={"debate_id": debate_id})
         return JSONResponse(content=jsonable_encoder(debate))
 
@@ -112,9 +114,11 @@ async def patch_debate(
 
     Returns the updated debate.
     """
-    debate = await crud.patch_debate(session, debate_id, debate_patch)
+    db_debate = await crud.patch_debate(
+        session, debate_id, round_id=debate_patch.round_id
+    )
 
-    if debate is None:
+    if db_debate is None:
         logger.info(
             "Debate not found.",
             extra={"debate_patch": debate_patch},
@@ -124,6 +128,7 @@ async def patch_debate(
             content={"message": "Debate not found."},
         )
     else:
+        debate = Debate.model_validate(db_debate)
         logger.info(
             "Patched debate.",
             extra={"debate_patch": debate_patch},
@@ -143,6 +148,8 @@ async def list_debates(
 
     Returns an empty list if none are found.
     """
-    debates = await crud.list_debates(session, query)
+    db_query = DBListDebatesQuery(**query.model_dump())
+    db_debates = await crud.list_debates(session, db_query)
+    debates = [Debate.model_validate(db_debate) for db_debate in db_debates]
     logger.info("Listed debates.", extra={"query": query})
     return JSONResponse(content=jsonable_encoder(debates))

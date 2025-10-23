@@ -12,14 +12,15 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import tournament as crud
+from tabbit.database.schemas import tournament as db_schemas
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.schemas.tournament import ListTournamentsQuery
+from tabbit.http.api.schemas.tournament import Tournament
+from tabbit.http.api.schemas.tournament import TournamentCreate
+from tabbit.http.api.schemas.tournament import TournamentID
+from tabbit.http.api.schemas.tournament import TournamentPatch
 from tabbit.http.api.util import not_found_response
-from tabbit.schemas.tournament import ListTournamentsQuery
-from tabbit.schemas.tournament import Tournament
-from tabbit.schemas.tournament import TournamentCreate
-from tabbit.schemas.tournament import TournamentID
-from tabbit.schemas.tournament import TournamentPatch
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,10 @@ async def create_tournament(
 
     Returns the tournament ID upon creation.
     """
-    tournament_id = TournamentID(id=await crud.create_tournament(session, tournament))
+    db_tournament = db_schemas.TournamentCreate(**tournament.model_dump())
+    tournament_id = TournamentID(
+        id=await crud.create_tournament(session, db_tournament)
+    )
     logger.info("Created tournament.", extra={"tournament_id": tournament_id})
     return JSONResponse(content=jsonable_encoder(tournament_id))
 
@@ -59,15 +63,16 @@ async def get_tournament(
 
     Returns the tournament if found; otherwise, 404 Not Found.
     """
-    tournament = await crud.get_tournament(session, tournament_id)
+    db_tournament = await crud.get_tournament(session, tournament_id)
 
-    if tournament is None:
+    if db_tournament is None:
         logger.info("Tournament not found.", extra={"tournament_id": tournament_id})
         return JSONResponse(
             status_code=http.HTTPStatus.NOT_FOUND,
             content={"message": "Tournament not found."},
         )
     else:
+        tournament = Tournament.model_validate(db_tournament)
         logger.info("Got tournament by ID.", extra={"tournament_id": tournament_id})
         return JSONResponse(content=jsonable_encoder(tournament))
 
@@ -112,9 +117,11 @@ async def patch_tournament(
 
     Returns the updated tournament.
     """
-    tournament = await crud.patch_tournament(session, tournament_id, tournament_patch)
+    patch_data = tournament_patch.model_dump(exclude_unset=True)
+    db_patch = db_schemas.TournamentPatch(**patch_data)
+    db_tournament = await crud.patch_tournament(session, tournament_id, db_patch)
 
-    if tournament is None:
+    if db_tournament is None:
         logger.info(
             "Tournament not found.",
             extra={"tournament_patch": tournament_patch},
@@ -124,6 +131,7 @@ async def patch_tournament(
             content={"message": "Tournament not found."},
         )
     else:
+        tournament = Tournament.model_validate(db_tournament)
         logger.info(
             "Patched tournament.",
             extra={"tournament_patch": tournament_patch},
@@ -143,6 +151,10 @@ async def list_tournaments(
 
     Returns an empty list if none are found.
     """
-    tournaments = await crud.list_tournaments(session, query)
+    db_query = db_schemas.ListTournamentsQuery(**query.model_dump())
+    db_tournaments = await crud.list_tournaments(session, db_query)
+    tournaments = [
+        Tournament.model_validate(db_tournament) for db_tournament in db_tournaments
+    ]
     logger.info("Listed tournaments.", extra={"query": query})
     return JSONResponse(content=jsonable_encoder(tournaments))

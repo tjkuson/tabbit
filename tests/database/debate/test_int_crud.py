@@ -10,11 +10,9 @@ from tabbit.database.operations.debate import patch_debate
 from tabbit.database.operations.round import create_round
 from tabbit.database.operations.tournament import create_tournament
 from tabbit.database.operations.tournament import delete_tournament
-from tabbit.schemas.debate import DebateCreate
-from tabbit.schemas.debate import DebatePatch
-from tabbit.schemas.debate import ListDebatesQuery
-from tabbit.schemas.round import RoundCreate
-from tabbit.schemas.tournament import TournamentCreate
+from tabbit.database.schemas.debate import ListDebatesQuery
+from tabbit.database.schemas.round import RoundCreate
+from tabbit.database.schemas.tournament import TournamentCreate
 
 TOURNAMENT_NAME = "European Universities Debating Championships 2025"
 TOURNAMENT_ABBREVIATION = "EUDC 2025"
@@ -38,10 +36,7 @@ async def _setup_data(session: AsyncSession) -> tuple[int, int, int]:
         status=ROUND_STATUS,
     )
     round_id = await create_round(session, round_create)
-    debate_create = DebateCreate(
-        round_id=round_id,
-    )
-    debate_id = await create_debate(session, debate_create)
+    debate_id = await create_debate(session, round_id)
     return tournament_id, round_id, debate_id
 
 
@@ -59,10 +54,7 @@ async def test_debate_create(session: AsyncSession) -> None:
         status=ROUND_STATUS,
     )
     round_id = await create_round(session, round_create)
-    debate_create = DebateCreate(
-        round_id=round_id,
-    )
-    debate_id = await create_debate(session, debate_create)
+    debate_id = await create_debate(session, round_id)
     assert isinstance(debate_id, int)
 
 
@@ -98,11 +90,9 @@ async def test_debate_update(session: AsyncSession) -> None:
         status=ROUND_STATUS,
     )
     second_round_id = await create_round(session, second_round_create)
-    debate_create = DebateCreate(round_id=round_id)
-    debate_id = await create_debate(session, debate_create)
+    debate_id = await create_debate(session, round_id)
 
-    patch = DebatePatch(round_id=second_round_id)
-    debate = await patch_debate(session, debate_id, patch)
+    debate = await patch_debate(session, debate_id, round_id=second_round_id)
     assert debate is not None
     assert debate.round_id == second_round_id
     assert debate.id == debate_id
@@ -180,10 +170,8 @@ async def test_debate_list_round_filter(session: AsyncSession) -> None:
     )
     second_round_id = await create_round(session, second_round_create)
 
-    debate_create_1 = DebateCreate(round_id=round_id)
-    debate_id_1 = await create_debate(session, debate_create_1)
-    debate_create_2 = DebateCreate(round_id=second_round_id)
-    debate_id_2 = await create_debate(session, debate_create_2)
+    debate_id_1 = await create_debate(session, round_id)
+    debate_id_2 = await create_debate(session, second_round_id)
 
     debates = await list_debates(
         session,
@@ -234,8 +222,7 @@ async def test_debate_list_limit(
     )
     round_id = await create_round(session, round_create)
     for _ in range(insert_n):
-        debate_create = DebateCreate(round_id=round_id)
-        _ = await create_debate(session, debate_create)
+        _ = await create_debate(session, round_id)
 
     result = await list_debates(
         session,
@@ -264,10 +251,14 @@ async def test_debate_delete_missing(session: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_debate_patch_missing(session: AsyncSession) -> None:
-    patch = DebatePatch(round_id=1)
-    debate = await patch_debate(
-        session,
-        debate_id=1,
-        debate_patch=patch,
-    )
+    debate = await patch_debate(session, debate_id=1, round_id=1)
     assert debate is None
+
+
+@pytest.mark.asyncio
+async def test_debate_patch_no_changes(session: AsyncSession) -> None:
+    _tournament_id, round_id, debate_id = await _setup_data(session)
+    debate = await patch_debate(session, debate_id, round_id=None)
+    assert debate is not None
+    assert debate.round_id == round_id
+    assert debate.id == debate_id

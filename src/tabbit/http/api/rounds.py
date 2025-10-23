@@ -12,14 +12,15 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import round as crud
+from tabbit.database.schemas import round as db_schemas
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.schemas.round import ListRoundsQuery
+from tabbit.http.api.schemas.round import Round
+from tabbit.http.api.schemas.round import RoundCreate
+from tabbit.http.api.schemas.round import RoundID
+from tabbit.http.api.schemas.round import RoundPatch
 from tabbit.http.api.util import not_found_response
-from tabbit.schemas.round import ListRoundsQuery
-from tabbit.schemas.round import Round
-from tabbit.schemas.round import RoundCreate
-from tabbit.schemas.round import RoundID
-from tabbit.schemas.round import RoundPatch
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,8 @@ async def create_round(
 
     Returns the round ID upon creation.
     """
-    round_id = RoundID(id=await crud.create_round(session, round_))
+    db_round = db_schemas.RoundCreate(**round_.model_dump())
+    round_id = RoundID(id=await crud.create_round(session, db_round))
     logger.info("Created round.", extra={"round_id": round_id})
     return JSONResponse(content=jsonable_encoder(round_id))
 
@@ -59,15 +61,16 @@ async def get_round(
 
     Returns the round if found; otherwise, 404 Not Found.
     """
-    round_ = await crud.get_round(session, round_id)
+    db_round = await crud.get_round(session, round_id)
 
-    if round_ is None:
+    if db_round is None:
         logger.info("Round not found.", extra={"round_id": round_id})
         return JSONResponse(
             status_code=http.HTTPStatus.NOT_FOUND,
             content={"message": "Round not found."},
         )
     else:
+        round_ = Round.model_validate(db_round)
         logger.info("Got round by ID.", extra={"round_id": round_id})
         return JSONResponse(content=jsonable_encoder(round_))
 
@@ -112,9 +115,11 @@ async def patch_round(
 
     Returns the updated round.
     """
-    round_ = await crud.patch_round(session, round_id, round_patch)
+    patch_data = round_patch.model_dump(exclude_unset=True)
+    db_patch = db_schemas.RoundPatch(**patch_data)
+    db_round = await crud.patch_round(session, round_id, db_patch)
 
-    if round_ is None:
+    if db_round is None:
         logger.info(
             "Round not found.",
             extra={"round_patch": round_patch},
@@ -124,6 +129,7 @@ async def patch_round(
             content={"message": "Round not found."},
         )
     else:
+        round_ = Round.model_validate(db_round)
         logger.info(
             "Patched round.",
             extra={"round_patch": round_patch},
@@ -143,6 +149,8 @@ async def list_rounds(
 
     Returns an empty list if none are found.
     """
-    rounds = await crud.list_rounds(session, query)
+    db_query = db_schemas.ListRoundsQuery(**query.model_dump())
+    db_rounds = await crud.list_rounds(session, db_query)
+    rounds = [Round.model_validate(db_round) for db_round in db_rounds]
     logger.info("Listed rounds.", extra={"query": query})
     return JSONResponse(content=jsonable_encoder(rounds))
