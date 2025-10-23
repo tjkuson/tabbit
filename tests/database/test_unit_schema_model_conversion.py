@@ -2,6 +2,7 @@ import pytest
 from pydantic import BaseModel
 
 from tabbit.database import models
+from tabbit.http.api.schemas.judge import Judge
 from tabbit.http.api.schemas.team import Team
 from tabbit.http.api.schemas.tournament import Tournament
 
@@ -31,6 +32,18 @@ from tabbit.http.api.schemas.tournament import Tournament
                 id=1,
                 name="World Universities Debating Championship 2025",
                 abbreviation="WUDC 2025",
+            ),
+        ),
+        (
+            models.Judge(
+                id=1,
+                tournament_id=42,
+                name="Jane Smith",
+            ),
+            Judge(
+                id=1,
+                tournament_id=42,
+                name="Jane Smith",
             ),
         ),
         (
