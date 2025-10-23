@@ -30,9 +30,11 @@ build-backend = "hatchling.build"
 dev = [
     "coverage~=7.11",
     "mypy~=1.18",
+    "psutil~=7.1",
     "pytest~=8.4",
     "pytest-asyncio~=1.2",
     "pytest-randomly~=4.0",
+    "pytest-xdist~=3.8",
 ]
 
 [tool.coverage.run]
@@ -41,6 +43,8 @@ core = "sysmon"
 omit = [
     "src/tabbit/config/logger.py",
 ]
+parallel = true
+patch = ["subprocess"]
 
 [tool.coverage.report]
 fail_under = 100

@@ -113,10 +113,10 @@ _logging_config: Final = {
         },
         "file_jsonl": {
             "class": logging.handlers.RotatingFileHandler,
-            "level": logging.getLevelName(logging.DEBUG),
+            "level": logging.getLevelName(logging.INFO),
             "formatter": "json",
             "filename": settings.log_filename,
-            "maxBytes": 10000,
+            "maxBytes": 1000000,
             "backupCount": 3,
         },
         "queue_handler": {
@@ -127,7 +127,7 @@ _logging_config: Final = {
     },
     "loggers": {
         "root": {
-            "level": logging.getLevelName(logging.DEBUG),
+            "level": logging.getLevelName(logging.INFO),
             "handlers": ["queue_handler"],
         }
     },
