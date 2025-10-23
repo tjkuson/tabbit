@@ -33,22 +33,29 @@ merging branch.
 This project targets 100% code coverage; all lines of code should be executed at
 least once during a full run of the test suite.
 
-To measure coverage with [coverage.py], run
+To measure coverage with [coverage.py], first, make sure that previous coverage
+data has been deleted by running
 
 ```shell
-uv run --frozen coverage run -m pytest
+uv run --frozen coverage erase
+```
+
+Then, run the tests via `coverage` by running
+
+```shell
+uv run --frozen coverage run -m pytest -n logical
+```
+
+Combine the per-process coverage data by running
+
+```shell
+uv run --froezn coverage combine
 ```
 
 and then review the report with
 
 ```shell
 uv run --frozen coverage report
-```
-
-Then, to erase the collected data
-
-```shell
-uv run --frozen coverage erase
 ```
 
 ### Typing

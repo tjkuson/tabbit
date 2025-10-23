@@ -70,7 +70,11 @@ jobs:
         run: |
           uv run --locked \
           coverage run --module \
-          pytest
+          pytest -n logical
+      - name: Combine coverage
+        run: |
+          uv run --locked \
+          coverage combine
       - name: Check coverage
         run: |
           uv run --locked \
