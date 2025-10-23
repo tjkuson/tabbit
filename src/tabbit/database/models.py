@@ -79,6 +79,10 @@ class Judge(Base):
     name: Mapped[str]
 
     tournament: Mapped[Tournament] = relationship(back_populates="judges")
+    ballots: Mapped[list[Ballot]] = relationship(
+        back_populates="judge",
+        cascade="all, delete-orphan",
+    )
 
 
 @final
@@ -107,3 +111,20 @@ class Debate(Base):
     round_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.ROUND}.id"))
 
     round: Mapped[Round] = relationship(back_populates="debates")
+    ballots: Mapped[list[Ballot]] = relationship(
+        back_populates="debate",
+        cascade="all, delete-orphan",
+    )
+
+
+@final
+class Ballot(Base):
+    __tablename__ = TableName.BALLOT
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    debate_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.DEBATE}.id"))
+    judge_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.JUDGE}.id"))
+    version: Mapped[int] = mapped_column(default=1)
+
+    debate: Mapped[Debate] = relationship(back_populates="ballots")
+    judge: Mapped[Judge] = relationship(back_populates="ballots")
