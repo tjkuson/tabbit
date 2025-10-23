@@ -4,6 +4,7 @@ from typing import final
 
 @final
 class TableName(enum.StrEnum):
+    BALLOT = "ballot"
     DEBATE = "debate"
     JUDGE = "judge"
     ROUND = "round"
