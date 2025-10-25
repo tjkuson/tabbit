@@ -42,7 +42,10 @@ async def get_debate(
     if debate_model is None:
         return None
     else:
-        return Debate.model_validate(debate_model)
+        return Debate(
+            id=debate_model.id,
+            round_id=debate_model.round_id,
+        )
 
 
 async def delete_debate(
@@ -89,7 +92,10 @@ async def patch_debate(
     if round_id is not None:
         debate_model.round_id = round_id
     await session.commit()
-    return Debate.model_validate(debate_model)
+    return Debate(
+        id=debate_model.id,
+        round_id=debate_model.round_id,
+    )
 
 
 async def list_debates(
@@ -115,4 +121,10 @@ async def list_debates(
 
     result = await session.execute(query)
     debates = result.scalars().all()
-    return [Debate.model_validate(debate_model) for debate_model in debates]
+    return [
+        Debate(
+            id=debate_model.id,
+            round_id=debate_model.round_id,
+        )
+        for debate_model in debates
+    ]

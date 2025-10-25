@@ -1,44 +1,47 @@
 """Round database schemas."""
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from dataclasses import dataclass
 
 from tabbit.database.enums import RoundStatus
+from tabbit.sentinel import Unset
+from tabbit.sentinel import UnsetT
 
 
-class RoundCreate(BaseModel):
+@dataclass(frozen=True, slots=True)
+class RoundCreate:
     """Schema for creating a round."""
 
-    name: str
-    abbreviation: str | None = None
     tournament_id: int
     sequence: int
     status: RoundStatus
+    name: str
+    abbreviation: str | None = None
 
 
-class Round(BaseModel):
+@dataclass(frozen=True, slots=True)
+class Round:
     """Schema for a round with ID."""
 
-    model_config = ConfigDict(from_attributes=True)
-
     id: int
-    name: str
-    abbreviation: str | None
     tournament_id: int
     sequence: int
     status: RoundStatus
+    name: str
+    abbreviation: str | None
 
 
-class RoundPatch(BaseModel):
+@dataclass(frozen=True, slots=True)
+class RoundPatch:
     """Schema for partially updating a round."""
 
-    name: str | None = None
-    abbreviation: str | None = None
-    sequence: int | None = None
-    status: RoundStatus | None = None
+    name: str | UnsetT = Unset
+    abbreviation: str | None | UnsetT = Unset
+    sequence: int | UnsetT = Unset
+    status: RoundStatus | UnsetT = Unset
 
 
-class ListRoundsQuery(BaseModel):
+@dataclass(frozen=True, slots=True)
+class ListRoundsQuery:
     """Schema for listing rounds with filters."""
 
     offset: int = 0

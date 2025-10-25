@@ -6,6 +6,7 @@ from tabbit.database.schemas.tournament import ListTournamentsQuery
 from tabbit.database.schemas.tournament import Tournament
 from tabbit.database.schemas.tournament import TournamentCreate
 from tabbit.database.schemas.tournament import TournamentPatch
+from tabbit.sentinel import Unset
 
 
 async def create_tournament(
@@ -47,7 +48,11 @@ async def get_tournament(
     if tournament_model is None:
         return None
     else:
-        return Tournament.model_validate(tournament_model)
+        return Tournament(
+            id=tournament_model.id,
+            name=tournament_model.name,
+            abbreviation=tournament_model.abbreviation,
+        )
 
 
 async def delete_tournament(
@@ -93,11 +98,17 @@ async def patch_tournament(
     if tournament_model is None:
         return None
 
-    update_data = tournament_patch.model_dump(exclude_unset=True)
-    for key, val in update_data.items():
-        setattr(tournament_model, key, val)
+    if tournament_patch.name is not Unset:
+        tournament_model.name = tournament_patch.name
+    if tournament_patch.abbreviation is not Unset:
+        tournament_model.abbreviation = tournament_patch.abbreviation
+
     await session.commit()
-    return Tournament.model_validate(tournament_model)
+    return Tournament(
+        id=tournament_model.id,
+        name=tournament_model.name,
+        abbreviation=tournament_model.abbreviation,
+    )
 
 
 async def list_tournaments(
@@ -125,4 +136,11 @@ async def list_tournaments(
 
     result = await session.execute(query)
     tournaments = result.scalars().all()
-    return [Tournament.model_validate(tournament) for tournament in tournaments]
+    return [
+        Tournament(
+            id=tournament.id,
+            name=tournament.name,
+            abbreviation=tournament.abbreviation,
+        )
+        for tournament in tournaments
+    ]

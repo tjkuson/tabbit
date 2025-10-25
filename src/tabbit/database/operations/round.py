@@ -6,6 +6,7 @@ from tabbit.database.schemas.round import ListRoundsQuery
 from tabbit.database.schemas.round import Round
 from tabbit.database.schemas.round import RoundCreate
 from tabbit.database.schemas.round import RoundPatch
+from tabbit.sentinel import Unset
 
 
 async def create_round(
@@ -50,7 +51,14 @@ async def get_round(
     if round_model is None:
         return None
     else:
-        return Round.model_validate(round_model)
+        return Round(
+            id=round_model.id,
+            tournament_id=round_model.tournament_id,
+            sequence=round_model.sequence,
+            status=round_model.status,
+            name=round_model.name,
+            abbreviation=round_model.abbreviation,
+        )
 
 
 async def delete_round(
@@ -94,11 +102,24 @@ async def patch_round(
     if round_model is None:
         return None
 
-    update_data = round_patch.model_dump(exclude_unset=True)
-    for key, val in update_data.items():
-        setattr(round_model, key, val)
+    if round_patch.name is not Unset:
+        round_model.name = round_patch.name
+    if round_patch.abbreviation is not Unset:
+        round_model.abbreviation = round_patch.abbreviation
+    if round_patch.sequence is not Unset:
+        round_model.sequence = round_patch.sequence
+    if round_patch.status is not Unset:
+        round_model.status = round_patch.status
+
     await session.commit()
-    return Round.model_validate(round_model)
+    return Round(
+        id=round_model.id,
+        tournament_id=round_model.tournament_id,
+        sequence=round_model.sequence,
+        status=round_model.status,
+        name=round_model.name,
+        abbreviation=round_model.abbreviation,
+    )
 
 
 async def list_rounds(
@@ -130,4 +151,14 @@ async def list_rounds(
 
     result = await session.execute(query)
     rounds = result.scalars().all()
-    return [Round.model_validate(round_model) for round_model in rounds]
+    return [
+        Round(
+            id=round_model.id,
+            tournament_id=round_model.tournament_id,
+            sequence=round_model.sequence,
+            status=round_model.status,
+            name=round_model.name,
+            abbreviation=round_model.abbreviation,
+        )
+        for round_model in rounds
+    ]

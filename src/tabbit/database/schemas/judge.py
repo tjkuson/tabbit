@@ -1,27 +1,27 @@
 """Judge database schemas."""
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from dataclasses import dataclass
 
 
-class JudgeCreate(BaseModel):
+@dataclass(frozen=True, slots=True)
+class JudgeCreate:
     """Schema for creating a judge."""
 
-    name: str
     tournament_id: int
+    name: str
 
 
-class Judge(BaseModel):
+@dataclass(frozen=True, slots=True)
+class Judge:
     """Schema for a judge with ID."""
 
-    model_config = ConfigDict(from_attributes=True)
-
     id: int
-    name: str
     tournament_id: int
+    name: str
 
 
-class ListJudgesQuery(BaseModel):
+@dataclass(frozen=True, slots=True)
+class ListJudgesQuery:
     """Schema for listing judges with filters."""
 
     offset: int = 0

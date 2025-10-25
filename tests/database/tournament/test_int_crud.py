@@ -37,24 +37,32 @@ async def test_tournament_read(session: AsyncSession) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("abbreviation", ["Euros 2025", None])
+@pytest.mark.parametrize(
+    ("patch", "expected_name", "expected_abbreviation"),
+    [
+        (TournamentPatch(abbreviation="Euros 2025"), NAME, "Euros 2025"),
+        (TournamentPatch(abbreviation=None), NAME, None),
+        (TournamentPatch(name="WUDC 2025"), "WUDC 2025", ABBREVIATION),
+    ],
+)
 async def test_tournament_update(
     session: AsyncSession,
-    abbreviation: str | None,
+    patch: TournamentPatch,
+    expected_name: str,
+    expected_abbreviation: str | None,
 ) -> None:
     tournament_id = await _setup_data(session)
 
-    patch = TournamentPatch(abbreviation=abbreviation)
     tournament = await patch_tournament(session, tournament_id, patch)
     assert tournament is not None
-    assert tournament.name == NAME
-    assert tournament.abbreviation == abbreviation
+    assert tournament.name == expected_name
+    assert tournament.abbreviation == expected_abbreviation
 
     # Read (to check the update persists).
     tournament = await crud.get_tournament(session, tournament_id)
     assert tournament is not None
-    assert tournament.name == NAME
-    assert tournament.abbreviation == abbreviation
+    assert tournament.name == expected_name
+    assert tournament.abbreviation == expected_abbreviation
 
 
 @pytest.mark.asyncio
