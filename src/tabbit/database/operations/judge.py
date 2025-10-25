@@ -46,7 +46,11 @@ async def get_judge(
     if judge_model is None:
         return None
     else:
-        return Judge.model_validate(judge_model)
+        return Judge(
+            id=judge_model.id,
+            tournament_id=judge_model.tournament_id,
+            name=judge_model.name,
+        )
 
 
 async def delete_judge(
@@ -93,7 +97,11 @@ async def patch_judge(
     if name is not None:
         judge_model.name = name
     await session.commit()
-    return Judge.model_validate(judge_model)
+    return Judge(
+        id=judge_model.id,
+        tournament_id=judge_model.tournament_id,
+        name=judge_model.name,
+    )
 
 
 async def list_judges(
@@ -123,4 +131,11 @@ async def list_judges(
 
     result = await session.execute(query)
     judges = result.scalars().all()
-    return [Judge.model_validate(judge) for judge in judges]
+    return [
+        Judge(
+            id=judge.id,
+            tournament_id=judge.tournament_id,
+            name=judge.name,
+        )
+        for judge in judges
+    ]

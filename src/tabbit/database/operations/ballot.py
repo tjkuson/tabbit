@@ -47,7 +47,12 @@ async def get_ballot(
     if ballot_model is None:
         return None
     else:
-        return Ballot.model_validate(ballot_model)
+        return Ballot(
+            id=ballot_model.id,
+            debate_id=ballot_model.debate_id,
+            judge_id=ballot_model.judge_id,
+            version=ballot_model.version,
+        )
 
 
 async def delete_ballot(
@@ -92,7 +97,12 @@ async def patch_ballot(
     if version is not None:
         ballot_model.version = version
     await session.commit()
-    return Ballot.model_validate(ballot_model)
+    return Ballot(
+        id=ballot_model.id,
+        debate_id=ballot_model.debate_id,
+        judge_id=ballot_model.judge_id,
+        version=ballot_model.version,
+    )
 
 
 async def list_ballots(
@@ -121,4 +131,12 @@ async def list_ballots(
 
     result = await session.execute(query)
     ballots = result.scalars().all()
-    return [Ballot.model_validate(ballot) for ballot in ballots]
+    return [
+        Ballot(
+            id=ballot.id,
+            debate_id=ballot.debate_id,
+            judge_id=ballot.judge_id,
+            version=ballot.version,
+        )
+        for ballot in ballots
+    ]

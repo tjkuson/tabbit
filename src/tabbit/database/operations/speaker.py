@@ -46,7 +46,11 @@ async def get_speaker(
     if speaker_model is None:
         return None
     else:
-        return Speaker.model_validate(speaker_model)
+        return Speaker(
+            id=speaker_model.id,
+            team_id=speaker_model.team_id,
+            name=speaker_model.name,
+        )
 
 
 async def delete_speaker(
@@ -93,7 +97,11 @@ async def patch_speaker(
     if name is not None:
         speaker_model.name = name
     await session.commit()
-    return Speaker.model_validate(speaker_model)
+    return Speaker(
+        id=speaker_model.id,
+        team_id=speaker_model.team_id,
+        name=speaker_model.name,
+    )
 
 
 async def list_speakers(
@@ -121,4 +129,11 @@ async def list_speakers(
 
     result = await session.execute(query)
     speakers = result.scalars().all()
-    return [Speaker.model_validate(speaker) for speaker in speakers]
+    return [
+        Speaker(
+            id=speaker.id,
+            team_id=speaker.team_id,
+            name=speaker.name,
+        )
+        for speaker in speakers
+    ]

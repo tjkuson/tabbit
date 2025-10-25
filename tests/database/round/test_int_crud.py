@@ -69,32 +69,62 @@ async def test_round_read(session: AsyncSession) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("abbreviation", ["R1", None])
+@pytest.mark.parametrize(
+    (
+        "patch",
+        "expected_name",
+        "expected_abbreviation",
+        "expected_sequence",
+        "expected_status",
+    ),
+    [
+        (RoundPatch(abbreviation="R1"), ROUND_NAME, "R1", ROUND_SEQUENCE, ROUND_STATUS),
+        (RoundPatch(abbreviation=None), ROUND_NAME, None, ROUND_SEQUENCE, ROUND_STATUS),
+        (
+            RoundPatch(name="Round 2"),
+            "Round 2",
+            ROUND_ABBREVIATION,
+            ROUND_SEQUENCE,
+            ROUND_STATUS,
+        ),
+        (RoundPatch(sequence=2), ROUND_NAME, ROUND_ABBREVIATION, 2, ROUND_STATUS),
+        (
+            RoundPatch(status=RoundStatus.READY),
+            ROUND_NAME,
+            ROUND_ABBREVIATION,
+            ROUND_SEQUENCE,
+            RoundStatus.READY,
+        ),
+    ],
+)
 async def test_round_update(
     session: AsyncSession,
-    abbreviation: str | None,
+    patch: RoundPatch,
+    expected_name: str,
+    expected_abbreviation: str | None,
+    expected_sequence: int,
+    expected_status: RoundStatus,
 ) -> None:
     tournament_id, round_id = await _setup_data(session)
 
-    patch = RoundPatch(abbreviation=abbreviation)
     round_ = await patch_round(session, round_id, patch)
     assert round_ is not None
-    assert round_.name == ROUND_NAME
-    assert round_.abbreviation == abbreviation
+    assert round_.name == expected_name
+    assert round_.abbreviation == expected_abbreviation
     assert round_.id == round_id
     assert round_.tournament_id == tournament_id
-    assert round_.sequence == ROUND_SEQUENCE
-    assert round_.status == ROUND_STATUS
+    assert round_.sequence == expected_sequence
+    assert round_.status == expected_status
 
     # Read (to check the update persists).
     round_ = await get_round(session, round_id)
     assert round_ is not None
-    assert round_.name == ROUND_NAME
-    assert round_.abbreviation == abbreviation
+    assert round_.name == expected_name
+    assert round_.abbreviation == expected_abbreviation
     assert round_.id == round_id
     assert round_.tournament_id == tournament_id
-    assert round_.sequence == ROUND_SEQUENCE
-    assert round_.status == ROUND_STATUS
+    assert round_.sequence == expected_sequence
+    assert round_.status == expected_status
 
 
 @pytest.mark.asyncio

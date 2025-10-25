@@ -120,6 +120,11 @@ select = [
     "RUF",
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"**/test_*" = [
+    "PLR0913",  # Having many arguments is useful for parametrization and avoiding logic in tests.
+]
+
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
 datetime = "dt"  # https://adamj.eu/tech/2019/09/12/how-i-import-pythons-datetime-module/
 

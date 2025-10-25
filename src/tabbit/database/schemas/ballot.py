@@ -1,10 +1,13 @@
 """Ballot database schemas."""
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from dataclasses import dataclass
+
+from tabbit.sentinel import Unset
+from tabbit.sentinel import UnsetT
 
 
-class BallotCreate(BaseModel):
+@dataclass(frozen=True, slots=True)
+class BallotCreate:
     """Schema for creating a ballot."""
 
     debate_id: int
@@ -12,10 +15,9 @@ class BallotCreate(BaseModel):
     version: int = 1
 
 
-class Ballot(BaseModel):
+@dataclass(frozen=True, slots=True)
+class Ballot:
     """Schema for a ballot with ID."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     id: int
     debate_id: int
@@ -23,13 +25,15 @@ class Ballot(BaseModel):
     version: int
 
 
-class BallotPatch(BaseModel):
+@dataclass(frozen=True, slots=True)
+class BallotPatch:
     """Schema for patching a ballot."""
 
-    version: int | None = None
+    version: int | UnsetT = Unset
 
 
-class ListBallotsQuery(BaseModel):
+@dataclass(frozen=True, slots=True)
+class ListBallotsQuery:
     """Schema for listing ballots with filters."""
 
     offset: int = 0

@@ -1,27 +1,27 @@
 """Speaker database schemas."""
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from dataclasses import dataclass
 
 
-class SpeakerCreate(BaseModel):
+@dataclass(frozen=True, slots=True)
+class SpeakerCreate:
     """Schema for creating a speaker."""
 
-    name: str
     team_id: int
+    name: str
 
 
-class Speaker(BaseModel):
+@dataclass(frozen=True, slots=True)
+class Speaker:
     """Schema for a speaker with ID."""
 
-    model_config = ConfigDict(from_attributes=True)
-
     id: int
-    name: str
     team_id: int
+    name: str
 
 
-class ListSpeakersQuery(BaseModel):
+@dataclass(frozen=True, slots=True)
+class ListSpeakersQuery:
     """Schema for listing speakers with filters."""
 
     offset: int = 0

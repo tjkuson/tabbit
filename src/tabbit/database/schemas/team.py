@@ -1,36 +1,40 @@
 """Team database schemas."""
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from dataclasses import dataclass
+
+from tabbit.sentinel import Unset
+from tabbit.sentinel import UnsetT
 
 
-class TeamCreate(BaseModel):
+@dataclass(frozen=True, slots=True)
+class TeamCreate:
     """Schema for creating a team."""
 
+    tournament_id: int
     name: str
     abbreviation: str | None = None
-    tournament_id: int
 
 
-class Team(BaseModel):
+@dataclass(frozen=True, slots=True)
+class Team:
     """Schema for a team with ID."""
 
-    model_config = ConfigDict(from_attributes=True)
-
     id: int
+    tournament_id: int
     name: str
     abbreviation: str | None
-    tournament_id: int
 
 
-class TeamPatch(BaseModel):
+@dataclass(frozen=True, slots=True)
+class TeamPatch:
     """Schema for partially updating a team."""
 
-    name: str | None = None
-    abbreviation: str | None = None
+    name: str | UnsetT = Unset
+    abbreviation: str | None | UnsetT = Unset
 
 
-class ListTeamsQuery(BaseModel):
+@dataclass(frozen=True, slots=True)
+class ListTeamsQuery:
     """Schema for listing teams with filters."""
 
     offset: int = 0
