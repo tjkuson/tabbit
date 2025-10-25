@@ -6,6 +6,7 @@ from tabbit.database.schemas.team import ListTeamsQuery
 from tabbit.database.schemas.team import Team
 from tabbit.database.schemas.team import TeamCreate
 from tabbit.database.schemas.team import TeamPatch
+from tabbit.sentinel import Unset
 
 
 async def create_team(
@@ -48,7 +49,12 @@ async def get_team(
     if team_model is None:
         return None
     else:
-        return Team.model_validate(team_model)
+        return Team(
+            id=team_model.id,
+            tournament_id=team_model.tournament_id,
+            name=team_model.name,
+            abbreviation=team_model.abbreviation,
+        )
 
 
 async def delete_team(
@@ -92,11 +98,18 @@ async def patch_team(
     if team_model is None:
         return None
 
-    update_data = team_patch.model_dump(exclude_unset=True)
-    for key, val in update_data.items():
-        setattr(team_model, key, val)
+    if team_patch.name is not Unset:
+        team_model.name = team_patch.name
+    if team_patch.abbreviation is not Unset:
+        team_model.abbreviation = team_patch.abbreviation
+
     await session.commit()
-    return Team.model_validate(team_model)
+    return Team(
+        id=team_model.id,
+        tournament_id=team_model.tournament_id,
+        name=team_model.name,
+        abbreviation=team_model.abbreviation,
+    )
 
 
 async def list_teams(
@@ -126,4 +139,12 @@ async def list_teams(
 
     result = await session.execute(query)
     teams = result.scalars().all()
-    return [Team.model_validate(team) for team in teams]
+    return [
+        Team(
+            id=team.id,
+            tournament_id=team.tournament_id,
+            name=team.name,
+            abbreviation=team.abbreviation,
+        )
+        for team in teams
+    ]

@@ -1,19 +1,18 @@
 """Debate database schemas."""
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from dataclasses import dataclass
 
 
-class Debate(BaseModel):
+@dataclass(frozen=True, slots=True)
+class Debate:
     """Schema for a debate with ID."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     id: int
     round_id: int
 
 
-class ListDebatesQuery(BaseModel):
+@dataclass(frozen=True, slots=True)
+class ListDebatesQuery:
     """Schema for listing debates with filters."""
 
     offset: int = 0

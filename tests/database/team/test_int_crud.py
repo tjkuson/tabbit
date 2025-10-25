@@ -60,26 +60,34 @@ async def test_team_read(session: AsyncSession) -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("abbreviation", ["MDU A", None])
+@pytest.mark.parametrize(
+    ("patch", "expected_name", "expected_abbreviation"),
+    [
+        (TeamPatch(abbreviation="MDU A"), TEAM_NAME, "MDU A"),
+        (TeamPatch(abbreviation=None), TEAM_NAME, None),
+        (TeamPatch(name="Oxford Union A"), "Oxford Union A", TEAM_ABBREVIATION),
+    ],
+)
 async def test_team_update(
     session: AsyncSession,
-    abbreviation: str | None,
+    patch: TeamPatch,
+    expected_name: str,
+    expected_abbreviation: str | None,
 ) -> None:
     tournament_id, team_id = await _setup_data(session)
 
-    patch = TeamPatch(abbreviation=abbreviation)
     team = await patch_team(session, team_id, patch)
     assert team is not None
-    assert team.name == TEAM_NAME
-    assert team.abbreviation == abbreviation
+    assert team.name == expected_name
+    assert team.abbreviation == expected_abbreviation
     assert team.id == team_id
     assert team.tournament_id == tournament_id
 
     # Read (to check the update persists).
     team = await get_team(session, team_id)
     assert team is not None
-    assert team.name == TEAM_NAME
-    assert team.abbreviation == abbreviation
+    assert team.name == expected_name
+    assert team.abbreviation == expected_abbreviation
     assert team.id == team_id
     assert team.tournament_id == tournament_id
 
