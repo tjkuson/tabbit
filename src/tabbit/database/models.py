@@ -8,6 +8,7 @@ and defines its columns, relationships, and behaviour.
 from typing import final
 
 from sqlalchemy import ForeignKey
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -46,6 +47,9 @@ class Tournament(Base):
 @final
 class Team(Base):
     __tablename__ = TableName.TEAM
+    __table_args__ = (
+        UniqueConstraint("tournament_id", "name", name="uq_team_tournament_name"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     tournament_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.TOURNAMENT}.id"))
@@ -68,6 +72,10 @@ class Speaker(Base):
     name: Mapped[str]
 
     team: Mapped[Team] = relationship(back_populates="speakers")
+    ballot_speaker_points: Mapped[list[BallotSpeakerPoints]] = relationship(
+        back_populates="speaker",
+        cascade="all, delete-orphan",
+    )
 
 
 @final
@@ -88,6 +96,11 @@ class Judge(Base):
 @final
 class Round(Base):
     __tablename__ = TableName.ROUND
+    __table_args__ = (
+        UniqueConstraint(
+            "tournament_id", "sequence", name="uq_round_tournament_sequence"
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     tournament_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.TOURNAMENT}.id"))
@@ -128,3 +141,24 @@ class Ballot(Base):
 
     debate: Mapped[Debate] = relationship(back_populates="ballots")
     judge: Mapped[Judge] = relationship(back_populates="ballots")
+    ballot_speaker_points: Mapped[list[BallotSpeakerPoints]] = relationship(
+        back_populates="ballot",
+        cascade="all, delete-orphan",
+    )
+
+
+@final
+class BallotSpeakerPoints(Base):
+    __tablename__ = TableName.BALLOT_SPEAKER_POINTS
+    __table_args__ = (
+        UniqueConstraint("ballot_id", "speaker_id", name="uq_ballot_speaker"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    ballot_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.BALLOT}.id"))
+    speaker_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.SPEAKER}.id"))
+    speaker_position: Mapped[int]
+    score: Mapped[int]
+
+    ballot: Mapped[Ballot] = relationship(back_populates="ballot_speaker_points")
+    speaker: Mapped[Speaker] = relationship(back_populates="ballot_speaker_points")

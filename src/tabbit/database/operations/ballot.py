@@ -76,35 +76,6 @@ async def delete_ballot(
     return ballot_id
 
 
-async def patch_ballot(
-    session: AsyncSession,
-    ballot_id: int,
-    version: int | None = None,
-) -> Ballot | None:
-    """Patch a ballot.
-
-    Args:
-        session: The database session to use for the operation.
-        ballot_id: The ID of the ballot to patch.
-        version: The new version number, if provided.
-
-    Returns:
-        The updated ballot, None if no ballot was found with the given ID.
-    """
-    ballot_model = await session.get(models.Ballot, ballot_id)
-    if ballot_model is None:
-        return None
-    if version is not None:
-        ballot_model.version = version
-    await session.commit()
-    return Ballot(
-        id=ballot_model.id,
-        debate_id=ballot_model.debate_id,
-        judge_id=ballot_model.judge_id,
-        version=ballot_model.version,
-    )
-
-
 async def list_ballots(
     session: AsyncSession,
     list_ballots_query: ListBallotsQuery,

@@ -36,14 +36,6 @@ class Ballot(BallotBase, BallotID):
     model_config = ConfigDict(from_attributes=True)
 
 
-class BallotPatch(BaseModel):
-    version: int | None = Field(
-        default=None,
-        description="The new version number for this ballot; not updated if unset.",
-        examples=[2],
-    )
-
-
 class ListBallotsQuery(BaseModel):
     offset: int = Field(
         default=0,
