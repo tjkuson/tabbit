@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations.team import create_team
@@ -265,3 +266,61 @@ async def test_team_patch_missing(session: AsyncSession) -> None:
         team_patch=patch,
     )
     assert team is None
+
+
+@pytest.mark.asyncio
+async def test_team_create_duplicate_name_in_tournament(session: AsyncSession) -> None:
+    tournament_create = TournamentCreate(
+        name=TOURNAMENT_NAME,
+        abbreviation=TOURNAMENT_ABBREVIATION,
+    )
+    tournament_id = await create_tournament(session, tournament_create)
+    team_create = TeamCreate(
+        name=TEAM_NAME,
+        abbreviation=TEAM_ABBREVIATION,
+        tournament_id=tournament_id,
+    )
+    await create_team(session, team_create)
+
+    # Attempt to create another team with the same name in the same tournament
+    duplicate_team_create = TeamCreate(
+        name=TEAM_NAME,
+        abbreviation="Different Abbreviation",
+        tournament_id=tournament_id,
+    )
+    with pytest.raises(IntegrityError, match=r"team\.tournament_id, team\.name"):
+        await create_team(session, duplicate_team_create)
+
+
+@pytest.mark.asyncio
+async def test_team_create_same_name_different_tournament(
+    session: AsyncSession,
+) -> None:
+    first_tournament_create = TournamentCreate(
+        name=TOURNAMENT_NAME,
+        abbreviation=TOURNAMENT_ABBREVIATION,
+    )
+    first_tournament_id = await create_tournament(session, first_tournament_create)
+    first_team_create = TeamCreate(
+        name=TEAM_NAME,
+        abbreviation=TEAM_ABBREVIATION,
+        tournament_id=first_tournament_id,
+    )
+    first_team_id = await create_team(session, first_team_create)
+
+    # Creating a team with the same name in a different tournament should succeed
+    second_tournament_create = TournamentCreate(
+        name="World Universities Debating Championships 2025",
+        abbreviation="WUDC 2025",
+    )
+    second_tournament_id = await create_tournament(session, second_tournament_create)
+    second_team_create = TeamCreate(
+        name=TEAM_NAME,
+        abbreviation=TEAM_ABBREVIATION,
+        tournament_id=second_tournament_id,
+    )
+    second_team_id = await create_team(session, second_team_create)
+
+    assert isinstance(first_team_id, int)
+    assert isinstance(second_team_id, int)
+    assert first_team_id != second_team_id

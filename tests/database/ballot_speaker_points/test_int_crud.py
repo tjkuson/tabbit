@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.enums import RoundStatus
@@ -443,3 +444,75 @@ async def test_ballot_speaker_points_delete_missing(session: AsyncSession) -> No
         ballot_speaker_points_id=1,
     )
     assert ballot_speaker_points_id is None
+
+
+@pytest.mark.asyncio
+async def test_ballot_speaker_points_create_duplicate_ballot_speaker(
+    session: AsyncSession,
+) -> None:
+    _tournament_id, speaker_id, ballot_id, _judge_id, _debate_id = await _setup_data(
+        session
+    )
+    ballot_speaker_points_create = BallotSpeakerPointsCreate(
+        ballot_id=ballot_id,
+        speaker_id=speaker_id,
+        speaker_position=SPEAKER_POSITION,
+        score=SCORE,
+    )
+    await create_ballot_speaker_points(session, ballot_speaker_points_create)
+
+    # Attempt to create another ballot speaker points with the same ballot and speaker
+    duplicate_ballot_speaker_points_create = BallotSpeakerPointsCreate(
+        ballot_id=ballot_id,
+        speaker_id=speaker_id,
+        speaker_position=SPEAKER_POSITION + 1,
+        score=SCORE + 1,
+    )
+    with pytest.raises(
+        IntegrityError,
+        match=r"ballot_speaker_points\.ballot_id, ballot_speaker_points\.speaker_id",
+    ):
+        await create_ballot_speaker_points(
+            session, duplicate_ballot_speaker_points_create
+        )
+
+
+@pytest.mark.asyncio
+async def test_ballot_speaker_points_create_same_speaker_different_ballot(
+    session: AsyncSession,
+) -> None:
+    _tournament_id, speaker_id, ballot_id, judge_id, debate_id = await _setup_data(
+        session
+    )
+    ballot_speaker_points_create = BallotSpeakerPointsCreate(
+        ballot_id=ballot_id,
+        speaker_id=speaker_id,
+        speaker_position=SPEAKER_POSITION,
+        score=SCORE,
+    )
+    first_bsp_id = await create_ballot_speaker_points(
+        session, ballot_speaker_points_create
+    )
+
+    # Creating a different ballot for the same debate
+    ballot_create_2 = BallotCreate(
+        debate_id=debate_id,
+        judge_id=judge_id,
+        version=2,
+    )
+    ballot_id_2 = await create_ballot(session, ballot_create_2)
+
+    # Creating speaker points with same speaker but different ballot succeeds
+    ballot_speaker_points_create_2 = BallotSpeakerPointsCreate(
+        ballot_id=ballot_id_2,
+        speaker_id=speaker_id,
+        speaker_position=SPEAKER_POSITION,
+        score=SCORE,
+    )
+    second_bsp_id = await create_ballot_speaker_points(
+        session, ballot_speaker_points_create_2
+    )
+
+    assert isinstance(first_bsp_id, int)
+    assert isinstance(second_bsp_id, int)
+    assert first_bsp_id != second_bsp_id
