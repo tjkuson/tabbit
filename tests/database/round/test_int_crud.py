@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.enums import RoundStatus
@@ -354,3 +355,71 @@ async def test_round_patch_missing(session: AsyncSession) -> None:
         round_patch=patch,
     )
     assert round_ is None
+
+
+@pytest.mark.asyncio
+async def test_round_create_duplicate_sequence_in_tournament(
+    session: AsyncSession,
+) -> None:
+    tournament_create = TournamentCreate(
+        name=TOURNAMENT_NAME,
+        abbreviation=TOURNAMENT_ABBREVIATION,
+    )
+    tournament_id = await create_tournament(session, tournament_create)
+    round_create = RoundCreate(
+        name=ROUND_NAME,
+        abbreviation=ROUND_ABBREVIATION,
+        tournament_id=tournament_id,
+        sequence=ROUND_SEQUENCE,
+        status=ROUND_STATUS,
+    )
+    await create_round(session, round_create)
+
+    # Attempt to create another round with the same sequence in the same tournament
+    duplicate_round_create = RoundCreate(
+        name="Different Round Name",
+        abbreviation="DR",
+        tournament_id=tournament_id,
+        sequence=ROUND_SEQUENCE,
+        status=ROUND_STATUS,
+    )
+    with pytest.raises(IntegrityError, match=r"round\.tournament_id, round\.sequence"):
+        await create_round(session, duplicate_round_create)
+
+
+@pytest.mark.asyncio
+async def test_round_create_same_sequence_different_tournament(
+    session: AsyncSession,
+) -> None:
+    first_tournament_create = TournamentCreate(
+        name=TOURNAMENT_NAME,
+        abbreviation=TOURNAMENT_ABBREVIATION,
+    )
+    first_tournament_id = await create_tournament(session, first_tournament_create)
+    first_round_create = RoundCreate(
+        name=ROUND_NAME,
+        abbreviation=ROUND_ABBREVIATION,
+        tournament_id=first_tournament_id,
+        sequence=ROUND_SEQUENCE,
+        status=ROUND_STATUS,
+    )
+    first_round_id = await create_round(session, first_round_create)
+
+    # Creating a round with the same sequence in a different tournament should succeed
+    second_tournament_create = TournamentCreate(
+        name="World Universities Debating Championships 2025",
+        abbreviation="WUDC 2025",
+    )
+    second_tournament_id = await create_tournament(session, second_tournament_create)
+    second_round_create = RoundCreate(
+        name=ROUND_NAME,
+        abbreviation=ROUND_ABBREVIATION,
+        tournament_id=second_tournament_id,
+        sequence=ROUND_SEQUENCE,
+        status=ROUND_STATUS,
+    )
+    second_round_id = await create_round(session, second_round_create)
+
+    assert isinstance(first_round_id, int)
+    assert isinstance(second_round_id, int)
+    assert first_round_id != second_round_id
