@@ -2,9 +2,6 @@
 
 from dataclasses import dataclass
 
-from tabbit.sentinel import Unset
-from tabbit.sentinel import UnsetT
-
 
 @dataclass(frozen=True, slots=True)
 class BallotCreate:
@@ -23,13 +20,6 @@ class Ballot:
     debate_id: int
     judge_id: int
     version: int
-
-
-@dataclass(frozen=True, slots=True)
-class BallotPatch:
-    """Schema for patching a ballot."""
-
-    version: int | UnsetT = Unset
 
 
 @dataclass(frozen=True, slots=True)

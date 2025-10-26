@@ -6,7 +6,6 @@ from tabbit.database.operations.ballot import create_ballot
 from tabbit.database.operations.ballot import delete_ballot
 from tabbit.database.operations.ballot import get_ballot
 from tabbit.database.operations.ballot import list_ballots
-from tabbit.database.operations.ballot import patch_ballot
 from tabbit.database.operations.debate import create_debate
 from tabbit.database.operations.judge import create_judge
 from tabbit.database.operations.round import create_round
@@ -81,30 +80,6 @@ async def test_ballot_read(session: AsyncSession) -> None:
     assert ballot.debate_id == debate_id
     assert ballot.judge_id == judge_id
     assert ballot.version == BALLOT_VERSION
-
-
-@pytest.mark.asyncio
-async def test_ballot_update_version(session: AsyncSession) -> None:
-    _tournament_id, judge_id, debate_id, _round_id = await _setup_data(session)
-    ballot_create = BallotCreate(
-        debate_id=debate_id,
-        judge_id=judge_id,
-        version=BALLOT_VERSION,
-    )
-    ballot_id = await create_ballot(session, ballot_create)
-
-    new_version = 2
-    ballot = await patch_ballot(session, ballot_id, version=new_version)
-    assert ballot is not None
-    assert ballot.version == new_version
-    assert ballot.id == ballot_id
-    assert ballot.debate_id == debate_id
-    assert ballot.judge_id == judge_id
-
-    # Read to check the update persists
-    ballot = await get_ballot(session, ballot_id)
-    assert ballot is not None
-    assert ballot.version == new_version
 
 
 @pytest.mark.asyncio
@@ -356,26 +331,3 @@ async def test_ballot_get_missing(session: AsyncSession) -> None:
 async def test_ballot_delete_missing(session: AsyncSession) -> None:
     ballot_id = await delete_ballot(session, ballot_id=1)
     assert ballot_id is None
-
-
-@pytest.mark.asyncio
-async def test_ballot_patch_missing(session: AsyncSession) -> None:
-    ballot = await patch_ballot(session, ballot_id=1, version=2)
-    assert ballot is None
-
-
-@pytest.mark.asyncio
-async def test_ballot_patch_no_changes(session: AsyncSession) -> None:
-    _tournament_id, judge_id, debate_id, _round_id = await _setup_data(session)
-    ballot_create = BallotCreate(
-        debate_id=debate_id,
-        judge_id=judge_id,
-        version=BALLOT_VERSION,
-    )
-    ballot_id = await create_ballot(session, ballot_create)
-    ballot = await patch_ballot(session, ballot_id, version=None)
-    assert ballot is not None
-    assert ballot.version == BALLOT_VERSION
-    assert ballot.id == ballot_id
-    assert ballot.debate_id == debate_id
-    assert ballot.judge_id == judge_id

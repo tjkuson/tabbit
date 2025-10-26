@@ -21,7 +21,6 @@ from tabbit.http.api.enums import Tags
 from tabbit.http.api.schemas.ballot import Ballot
 from tabbit.http.api.schemas.ballot import BallotCreate
 from tabbit.http.api.schemas.ballot import BallotID
-from tabbit.http.api.schemas.ballot import BallotPatch
 from tabbit.http.api.schemas.ballot import ListBallotsQuery
 from tabbit.http.api.util import not_found_response
 
@@ -102,44 +101,6 @@ async def delete_ballot(
     else:
         logger.info("Deleted ballot by ID.", extra={"ballot_id": ballot_id})
         return Response(status_code=http.HTTPStatus.NO_CONTENT)
-
-
-@ballots_router.patch(
-    "/{ballot_id}",
-    response_model=Ballot,
-    responses=not_found_response("ballot"),
-)
-async def patch_ballot(
-    ballot_id: int,
-    ballot_patch: BallotPatch,
-    session: Annotated[AsyncSession, Depends(session_manager.session)],
-) -> JSONResponse:
-    """Patch an existing ballot.
-
-    Returns the updated ballot.
-    """
-    db_ballot = await crud.patch_ballot(
-        session,
-        ballot_id,
-        version=ballot_patch.version,
-    )
-
-    if db_ballot is None:
-        logger.info(
-            "Ballot not found.",
-            extra={"ballot_patch": ballot_patch},
-        )
-        return JSONResponse(
-            status_code=http.HTTPStatus.NOT_FOUND,
-            content={"message": "Ballot not found."},
-        )
-    else:
-        ballot = Ballot.model_validate(db_ballot)
-        logger.info(
-            "Patched ballot.",
-            extra={"ballot_patch": ballot_patch},
-        )
-        return JSONResponse(content=jsonable_encoder(ballot))
 
 
 @ballots_router.get(

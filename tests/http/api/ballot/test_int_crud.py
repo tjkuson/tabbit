@@ -97,42 +97,6 @@ async def test_api_ballot_read(client: httpx.AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_api_ballot_update_version(client: httpx.AsyncClient) -> None:
-    _tournament_id, judge_id, debate_id, _round_id = await _setup_data(client)
-    response = await client.post(
-        "/v1/ballot/create",
-        json={
-            "debate_id": debate_id,
-            "judge_id": judge_id,
-            "version": BALLOT_VERSION,
-        },
-    )
-    ballot_id = response.json()["id"]
-    new_version = 2
-    response = await client.patch(
-        f"/v1/ballot/{ballot_id}",
-        json={"version": new_version},
-    )
-    assert response.status_code == http.HTTPStatus.OK
-    assert response.json() == {
-        "id": ballot_id,
-        "debate_id": debate_id,
-        "judge_id": judge_id,
-        "version": new_version,
-    }
-
-    # Check the update persists.
-    response = await client.get(f"/v1/ballot/{ballot_id}")
-    assert response.status_code == http.HTTPStatus.OK
-    assert response.json() == {
-        "id": ballot_id,
-        "debate_id": debate_id,
-        "judge_id": judge_id,
-        "version": new_version,
-    }
-
-
-@pytest.mark.asyncio
 async def test_api_ballot_delete(client: httpx.AsyncClient) -> None:
     _tournament_id, judge_id, debate_id, _round_id = await _setup_data(client)
     response = await client.post(
@@ -354,10 +318,4 @@ async def test_api_ballot_get_missing(client: httpx.AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_api_ballot_delete_missing(client: httpx.AsyncClient) -> None:
     response = await client.delete("/v1/ballot/1")
-    assert response.status_code == http.HTTPStatus.NOT_FOUND
-
-
-@pytest.mark.asyncio
-async def test_api_ballot_patch_missing(client: httpx.AsyncClient) -> None:
-    response = await client.patch("/v1/ballot/1", json={"version": 2})
     assert response.status_code == http.HTTPStatus.NOT_FOUND
