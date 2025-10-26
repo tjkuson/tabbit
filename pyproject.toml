@@ -83,6 +83,7 @@ select = [
     "YTT",
     "ANN",
     "ASYNC",
+    "S",
     "BLE",
     "FBT",
     "B",
@@ -122,6 +123,7 @@ select = [
 
 [tool.ruff.lint.per-file-ignores]
 "**/test_*" = [
+    "S101",  # We can assert in tests.
     "PLR0913",  # Having many arguments is useful for parametrization and avoiding logic in tests.
 ]
 
