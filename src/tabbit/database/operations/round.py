@@ -21,6 +21,9 @@ async def create_round(
 
     Returns:
         The ID of the created round.
+
+    Raises:
+        sqlalchemy.exc.IntegrityError: When unique constraints are violated.
     """
     round_model = models.Round(
         name=round_create.name,
@@ -97,6 +100,9 @@ async def patch_round(
 
     Returns:
         The updated round, None if no round was found with the given ID.
+
+    Raises:
+        sqlalchemy.exc.IntegrityError: When unique constraints are violated.
     """
     round_model = await session.get(models.Round, round_id)
     if round_model is None:

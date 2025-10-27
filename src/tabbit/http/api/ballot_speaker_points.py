@@ -11,6 +11,7 @@ from fastapi import Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import ballot_speaker_points as crud
@@ -22,11 +23,12 @@ from tabbit.database.schemas.ballot_speaker_points import (
 )
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import conflict_response
+from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.ballot_speaker_points import BallotSpeakerPoints
 from tabbit.http.api.schemas.ballot_speaker_points import BallotSpeakerPointsCreate
 from tabbit.http.api.schemas.ballot_speaker_points import BallotSpeakerPointsID
 from tabbit.http.api.schemas.ballot_speaker_points import ListBallotSpeakerPointsQuery
-from tabbit.http.api.util import not_found_response
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,9 @@ ballot_speaker_points_router: Final = APIRouter(
 @ballot_speaker_points_router.post(
     "/create",
     response_model=BallotSpeakerPointsID,
+    responses=conflict_response(
+        "Speaker points for the speaker in this ballot already exist"
+    ),
 )
 async def create_ballot_speaker_points(
     ballot_speaker_points: BallotSpeakerPointsCreate,
@@ -51,9 +56,20 @@ async def create_ballot_speaker_points(
     db_ballot_speaker_points = DBBallotSpeakerPointsCreate(
         **ballot_speaker_points.model_dump()
     )
-    ballot_speaker_points_id = BallotSpeakerPointsID(
-        id=await crud.create_ballot_speaker_points(session, db_ballot_speaker_points)
-    )
+    try:
+        ballot_speaker_points_id = BallotSpeakerPointsID(
+            id=await crud.create_ballot_speaker_points(
+                session, db_ballot_speaker_points
+            )
+        )
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={
+                "message": "Speaker points for the speaker in this ballot already exist"
+            },
+        )
     logger.info(
         "Created ballot speaker points.",
         extra={"ballot_speaker_points_id": ballot_speaker_points_id},

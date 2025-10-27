@@ -18,11 +18,11 @@ from tabbit.database.schemas.ballot import BallotCreate as DBBallotCreate
 from tabbit.database.schemas.ballot import ListBallotsQuery as DBListBallotsQuery
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.ballot import Ballot
 from tabbit.http.api.schemas.ballot import BallotCreate
 from tabbit.http.api.schemas.ballot import BallotID
 from tabbit.http.api.schemas.ballot import ListBallotsQuery
-from tabbit.http.api.util import not_found_response
 
 logger = logging.getLogger(__name__)
 

@@ -16,12 +16,12 @@ from tabbit.database.schemas.speaker import ListSpeakersQuery as DBListSpeakersQ
 from tabbit.database.schemas.speaker import SpeakerCreate as DBSpeakerCreate
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.speaker import ListSpeakersQuery
 from tabbit.http.api.schemas.speaker import Speaker
 from tabbit.http.api.schemas.speaker import SpeakerCreate
 from tabbit.http.api.schemas.speaker import SpeakerID
 from tabbit.http.api.schemas.speaker import SpeakerPatch
-from tabbit.http.api.util import not_found_response
 
 logger = logging.getLogger(__name__)
 

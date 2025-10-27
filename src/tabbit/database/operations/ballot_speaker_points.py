@@ -19,6 +19,9 @@ async def create_ballot_speaker_points(
 
     Returns:
         The ID of the created ballot speaker points.
+
+    Raises:
+        sqlalchemy.exc.IntegrityError: When unique constraints are violated.
     """
     ballot_speaker_points_model = models.BallotSpeakerPoints(
         ballot_id=ballot_speaker_points_create.ballot_id,

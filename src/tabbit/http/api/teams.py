@@ -9,18 +9,20 @@ from fastapi import Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import team as crud
 from tabbit.database.schemas import team as db_schemas
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import conflict_response
+from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.team import ListTeamsQuery
 from tabbit.http.api.schemas.team import Team
 from tabbit.http.api.schemas.team import TeamCreate
 from tabbit.http.api.schemas.team import TeamID
 from tabbit.http.api.schemas.team import TeamPatch
-from tabbit.http.api.util import not_found_response
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +35,9 @@ teams_router: Final = APIRouter(
 @teams_router.post(
     "/create",
     response_model=TeamID,
+    responses=conflict_response(
+        "A team with this name already exists in this tournament"
+    ),
 )
 async def create_team(
     team: TeamCreate,
@@ -43,7 +48,16 @@ async def create_team(
     Returns the team ID upon creation.
     """
     db_team = db_schemas.TeamCreate(**team.model_dump())
-    team_id = TeamID(id=await crud.create_team(session, db_team))
+    try:
+        team_id = TeamID(id=await crud.create_team(session, db_team))
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={
+                "message": "A team with this name already exists in this tournament"
+            },
+        )
     logger.info("Created team.", extra={"team_id": team_id})
     return JSONResponse(content=jsonable_encoder(team_id))
 
@@ -104,7 +118,8 @@ async def delete_team(
 @teams_router.patch(
     "/{team_id}",
     response_model=Team,
-    responses=not_found_response("team"),
+    responses=not_found_response("team")
+    | conflict_response("A team with this name already exists in this tournament"),
 )
 async def patch_team(
     team_id: int,
@@ -117,7 +132,16 @@ async def patch_team(
     """
     patch_data = team_patch.model_dump(exclude_unset=True)
     db_patch = db_schemas.TeamPatch(**patch_data)
-    db_team = await crud.patch_team(session, team_id, db_patch)
+    try:
+        db_team = await crud.patch_team(session, team_id, db_patch)
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={
+                "message": "A team with this name already exists in this tournament"
+            },
+        )
 
     if db_team is None:
         logger.info(

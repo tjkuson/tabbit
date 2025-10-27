@@ -21,6 +21,9 @@ async def create_team(
 
     Returns:
         The ID of the created team.
+
+    Raises:
+        sqlalchemy.exc.IntegrityError: When unique constraints are violated.
     """
     team_model = models.Team(
         name=team_create.name,
@@ -93,6 +96,9 @@ async def patch_team(
 
     Returns:
         The updated team, None if no team was found with the given ID.
+
+    Raises:
+        sqlalchemy.exc.IntegrityError: When unique constraints are violated.
     """
     team_model = await session.get(models.Team, team_id)
     if team_model is None:

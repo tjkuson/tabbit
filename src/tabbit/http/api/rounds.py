@@ -9,18 +9,20 @@ from fastapi import Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import round as crud
 from tabbit.database.schemas import round as db_schemas
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import conflict_response
+from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.round import ListRoundsQuery
 from tabbit.http.api.schemas.round import Round
 from tabbit.http.api.schemas.round import RoundCreate
 from tabbit.http.api.schemas.round import RoundID
 from tabbit.http.api.schemas.round import RoundPatch
-from tabbit.http.api.util import not_found_response
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +35,7 @@ rounds_router: Final = APIRouter(
 @rounds_router.post(
     "/create",
     response_model=RoundID,
+    responses=conflict_response("Round with this sequence already exists"),
 )
 async def create_round(
     round_: RoundCreate,
@@ -43,7 +46,14 @@ async def create_round(
     Returns the round ID upon creation.
     """
     db_round = db_schemas.RoundCreate(**round_.model_dump())
-    round_id = RoundID(id=await crud.create_round(session, db_round))
+    try:
+        round_id = RoundID(id=await crud.create_round(session, db_round))
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={"message": "Round with this sequence already exists"},
+        )
     logger.info("Created round.", extra={"round_id": round_id})
     return JSONResponse(content=jsonable_encoder(round_id))
 
@@ -104,7 +114,8 @@ async def delete_round(
 @rounds_router.patch(
     "/{round_id}",
     response_model=Round,
-    responses=not_found_response("round"),
+    responses=not_found_response("round")
+    | conflict_response("Round with this sequence already exists"),
 )
 async def patch_round(
     round_id: int,
@@ -117,7 +128,14 @@ async def patch_round(
     """
     patch_data = round_patch.model_dump(exclude_unset=True)
     db_patch = db_schemas.RoundPatch(**patch_data)
-    db_round = await crud.patch_round(session, round_id, db_patch)
+    try:
+        db_round = await crud.patch_round(session, round_id, db_patch)
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={"message": "Round with this sequence already exists"},
+        )
 
     if db_round is None:
         logger.info(

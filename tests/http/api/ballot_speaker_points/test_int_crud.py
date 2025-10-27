@@ -443,3 +443,39 @@ async def test_api_ballot_speaker_points_delete_missing(
 ) -> None:
     response = await client.delete("/v1/ballot-speaker-points/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.asyncio
+async def test_api_ballot_speaker_points_create_duplicate_ballot_speaker(
+    client: httpx.AsyncClient,
+) -> None:
+    _tournament_id, speaker_id, ballot_id, _judge_id, _debate_id = await _setup_data(
+        client
+    )
+
+    # Create first ballot speaker points
+    response = await client.post(
+        "/v1/ballot-speaker-points/create",
+        json={
+            "ballot_id": ballot_id,
+            "speaker_id": speaker_id,
+            "speaker_position": SPEAKER_POSITION,
+            "score": SCORE,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.OK
+
+    # Attempt to create duplicate ballot speaker points with same ballot and speaker
+    response = await client.post(
+        "/v1/ballot-speaker-points/create",
+        json={
+            "ballot_id": ballot_id,
+            "speaker_id": speaker_id,
+            "speaker_position": SPEAKER_POSITION + 1,
+            "score": SCORE + 1,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json() == {
+        "message": "Speaker points for the speaker in this ballot already exist"
+    }
