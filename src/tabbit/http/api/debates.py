@@ -15,12 +15,12 @@ from tabbit.database.operations import debate as crud
 from tabbit.database.schemas.debate import ListDebatesQuery as DBListDebatesQuery
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.debate import Debate
 from tabbit.http.api.schemas.debate import DebateCreate
 from tabbit.http.api.schemas.debate import DebateID
 from tabbit.http.api.schemas.debate import DebatePatch
 from tabbit.http.api.schemas.debate import ListDebatesQuery
-from tabbit.http.api.util import not_found_response
 
 logger = logging.getLogger(__name__)
 

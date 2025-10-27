@@ -15,12 +15,12 @@ from tabbit.database.operations import tournament as crud
 from tabbit.database.schemas import tournament as db_schemas
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.tournament import ListTournamentsQuery
 from tabbit.http.api.schemas.tournament import Tournament
 from tabbit.http.api.schemas.tournament import TournamentCreate
 from tabbit.http.api.schemas.tournament import TournamentID
 from tabbit.http.api.schemas.tournament import TournamentPatch
-from tabbit.http.api.util import not_found_response
 
 logger = logging.getLogger(__name__)
 

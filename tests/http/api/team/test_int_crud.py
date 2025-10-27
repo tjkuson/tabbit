@@ -244,3 +244,89 @@ async def test_api_team_delete_missing(client: httpx.AsyncClient) -> None:
 async def test_api_team_patch_missing(client: httpx.AsyncClient) -> None:
     response = await client.patch("/v1/team/1", json={"abbreviation": None})
     assert response.status_code == http.HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.asyncio
+async def test_api_team_create_duplicate_name_in_tournament(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={
+            "name": TOURNAMENT_NAME,
+            "abbreviation": TOURNAMENT_ABBREVIATION,
+        },
+    )
+    tournament_id = response.json()["id"]
+
+    # Create first team
+    response = await client.post(
+        "/v1/team/create",
+        json={
+            "name": TEAM_NAME,
+            "abbreviation": TEAM_ABBREVIATION,
+            "tournament_id": tournament_id,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.OK
+
+    # Attempt to create duplicate team with same name in same tournament
+    response = await client.post(
+        "/v1/team/create",
+        json={
+            "name": TEAM_NAME,
+            "abbreviation": "Different Abbreviation",
+            "tournament_id": tournament_id,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json() == {
+        "message": "A team with this name already exists in this tournament"
+    }
+
+
+@pytest.mark.asyncio
+async def test_api_team_patch_duplicate_name_in_tournament(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={
+            "name": TOURNAMENT_NAME,
+            "abbreviation": TOURNAMENT_ABBREVIATION,
+        },
+    )
+    tournament_id = response.json()["id"]
+
+    # Create first team
+    response = await client.post(
+        "/v1/team/create",
+        json={
+            "name": TEAM_NAME,
+            "abbreviation": TEAM_ABBREVIATION,
+            "tournament_id": tournament_id,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.OK
+
+    # Create second team with different name
+    response = await client.post(
+        "/v1/team/create",
+        json={
+            "name": "Oxford Union A",
+            "abbreviation": "Oxford A",
+            "tournament_id": tournament_id,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.OK
+    team_id = response.json()["id"]
+
+    # Attempt to patch second team to have same name as first team
+    response = await client.patch(
+        f"/v1/team/{team_id}",
+        json={"name": TEAM_NAME},
+    )
+    assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json() == {
+        "message": "A team with this name already exists in this tournament"
+    }

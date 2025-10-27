@@ -316,3 +316,93 @@ async def test_api_round_delete_missing(client: httpx.AsyncClient) -> None:
 async def test_api_round_patch_missing(client: httpx.AsyncClient) -> None:
     response = await client.patch("/v1/round/1", json={"abbreviation": None})
     assert response.status_code == http.HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.asyncio
+async def test_api_round_create_duplicate_sequence_in_tournament(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={
+            "name": TOURNAMENT_NAME,
+            "abbreviation": TOURNAMENT_ABBREVIATION,
+        },
+    )
+    tournament_id = response.json()["id"]
+
+    # Create first round
+    response = await client.post(
+        "/v1/round/create",
+        json={
+            "name": ROUND_NAME,
+            "abbreviation": ROUND_ABBREVIATION,
+            "tournament_id": tournament_id,
+            "sequence": ROUND_SEQUENCE,
+            "status": ROUND_STATUS,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.OK
+
+    # Attempt to create duplicate round with same sequence in same tournament
+    response = await client.post(
+        "/v1/round/create",
+        json={
+            "name": "Different Round Name",
+            "abbreviation": "DR",
+            "tournament_id": tournament_id,
+            "sequence": ROUND_SEQUENCE,
+            "status": ROUND_STATUS,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json() == {"message": "Round with this sequence already exists"}
+
+
+@pytest.mark.asyncio
+async def test_api_round_patch_duplicate_sequence_in_tournament(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={
+            "name": TOURNAMENT_NAME,
+            "abbreviation": TOURNAMENT_ABBREVIATION,
+        },
+    )
+    tournament_id = response.json()["id"]
+
+    # Create first round
+    response = await client.post(
+        "/v1/round/create",
+        json={
+            "name": ROUND_NAME,
+            "abbreviation": ROUND_ABBREVIATION,
+            "tournament_id": tournament_id,
+            "sequence": ROUND_SEQUENCE,
+            "status": ROUND_STATUS,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.OK
+
+    # Create second round with different sequence
+    response = await client.post(
+        "/v1/round/create",
+        json={
+            "name": "Round 2",
+            "abbreviation": "R2",
+            "tournament_id": tournament_id,
+            "sequence": 2,
+            "status": ROUND_STATUS,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.OK
+    round_id = response.json()["id"]
+
+    # Attempt to patch second round to have same sequence as first round
+    response = await client.patch(
+        f"/v1/round/{round_id}",
+        json={"sequence": ROUND_SEQUENCE},
+    )
+    assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json() == {"message": "Round with this sequence already exists"}

@@ -16,12 +16,12 @@ from tabbit.database.schemas.judge import JudgeCreate as DBJudgeCreate
 from tabbit.database.schemas.judge import ListJudgesQuery as DBListJudgesQuery
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.judge import Judge
 from tabbit.http.api.schemas.judge import JudgeCreate
 from tabbit.http.api.schemas.judge import JudgeID
 from tabbit.http.api.schemas.judge import JudgePatch
 from tabbit.http.api.schemas.judge import ListJudgesQuery
-from tabbit.http.api.util import not_found_response
 
 logger = logging.getLogger(__name__)
 
