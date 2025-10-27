@@ -145,6 +145,10 @@ class Ballot(Base):
         back_populates="ballot",
         cascade="all, delete-orphan",
     )
+    ballot_team_scores: Mapped[list[BallotTeamScore]] = relationship(
+        back_populates="ballot",
+        cascade="all, delete-orphan",
+    )
 
 
 @final
@@ -162,3 +166,17 @@ class BallotSpeakerPoints(Base):
 
     ballot: Mapped[Ballot] = relationship(back_populates="ballot_speaker_points")
     speaker: Mapped[Speaker] = relationship(back_populates="ballot_speaker_points")
+
+
+@final
+class BallotTeamScore(Base):
+    __tablename__ = TableName.BALLOT_TEAM_SCORE
+    __table_args__ = (UniqueConstraint("ballot_id", "team_id", name="uq_ballot_team"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    ballot_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.BALLOT}.id"))
+    team_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.TEAM}.id"))
+    score: Mapped[int]
+
+    ballot: Mapped[Ballot] = relationship(back_populates="ballot_team_scores")
+    team: Mapped[Team] = relationship()
