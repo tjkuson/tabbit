@@ -114,6 +114,22 @@ class Round(Base):
         back_populates="round",
         cascade="all, delete-orphan",
     )
+    motions: Mapped[list[Motion]] = relationship(
+        back_populates="round",
+        cascade="all, delete-orphan",
+    )
+
+
+@final
+class Motion(Base):
+    __tablename__ = TableName.MOTION
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    round_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.ROUND}.id"))
+    text: Mapped[str]
+    infoslide: Mapped[str | None]
+
+    round: Mapped[Round] = relationship(back_populates="motions")
 
 
 @final
