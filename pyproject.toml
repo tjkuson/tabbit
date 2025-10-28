@@ -125,6 +125,7 @@ select = [
 "**/test_*" = [
     "S101",  # We can assert in tests.
     "PLR0913",  # Having many arguments is useful for parametrization and avoiding logic in tests.
+    "PLR2004",  # Magic values in tests are fine.
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
