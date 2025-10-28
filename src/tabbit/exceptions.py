@@ -4,3 +4,7 @@ class TabbitError(Exception):
 
 class TabbitLoggerError(TabbitError):
     pass
+
+
+class TabbitComputeDrawError(TabbitError):
+    pass
