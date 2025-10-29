@@ -24,6 +24,7 @@ async def test_api_team_create_invalid_tournament_id(client: httpx.AsyncClient) 
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"
 
 
 @pytest.mark.asyncio
@@ -37,6 +38,7 @@ async def test_api_speaker_create_invalid_team_id(client: httpx.AsyncClient) -> 
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"
 
 
 @pytest.mark.asyncio
@@ -52,6 +54,7 @@ async def test_api_judge_create_invalid_tournament_id(
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"
 
 
 @pytest.mark.asyncio
@@ -70,6 +73,7 @@ async def test_api_round_create_invalid_tournament_id(
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"
 
 
 @pytest.mark.asyncio
@@ -82,6 +86,7 @@ async def test_api_debate_create_invalid_round_id(client: httpx.AsyncClient) -> 
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"
 
 
 @pytest.mark.asyncio
@@ -116,6 +121,7 @@ async def test_api_ballot_create_invalid_debate_id(client: httpx.AsyncClient) ->
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"
 
 
 @pytest.mark.asyncio
@@ -161,6 +167,7 @@ async def test_api_ballot_create_invalid_judge_id(client: httpx.AsyncClient) -> 
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"
 
 
 @pytest.mark.asyncio
@@ -208,6 +215,7 @@ async def test_api_ballot_speaker_points_create_invalid_ballot_id(
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"
 
 
 @pytest.mark.asyncio
@@ -275,6 +283,7 @@ async def test_api_ballot_speaker_points_create_invalid_speaker_id(
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"
 
 
 @pytest.mark.asyncio
@@ -312,6 +321,7 @@ async def test_api_ballot_team_score_create_invalid_ballot_id(
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"
 
 
 @pytest.mark.asyncio
@@ -378,3 +388,4 @@ async def test_api_ballot_team_score_create_invalid_team_id(
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"

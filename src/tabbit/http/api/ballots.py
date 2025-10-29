@@ -18,6 +18,7 @@ from tabbit.database.operations import ballot as crud
 from tabbit.database.schemas.ballot import BallotCreate as DBBallotCreate
 from tabbit.database.schemas.ballot import ListBallotsQuery as DBListBallotsQuery
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
 from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
@@ -52,9 +53,10 @@ async def create_ballot(
         ballot_id = BallotID(id=await crud.create_ballot(session, db_ballot))
     except IntegrityError as exc:
         logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
         return JSONResponse(
             status_code=http.HTTPStatus.CONFLICT,
-            content={"message": "Database constraint violated"},
+            content={"message": message},
         )
     logger.info("Created ballot.", extra={"ballot_id": ballot_id})
     return JSONResponse(content=jsonable_encoder(ballot_id))

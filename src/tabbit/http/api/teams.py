@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tabbit.database.operations import team as crud
 from tabbit.database.schemas import team as db_schemas
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
 from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
@@ -52,11 +53,10 @@ async def create_team(
         team_id = TeamID(id=await crud.create_team(session, db_team))
     except IntegrityError as exc:
         logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
         return JSONResponse(
             status_code=http.HTTPStatus.CONFLICT,
-            content={
-                "message": "A team with this name already exists in this tournament"
-            },
+            content={"message": message},
         )
     logger.info("Created team.", extra={"team_id": team_id})
     return JSONResponse(content=jsonable_encoder(team_id))
@@ -136,11 +136,10 @@ async def patch_team(
         db_team = await crud.patch_team(session, team_id, db_patch)
     except IntegrityError as exc:
         logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
         return JSONResponse(
             status_code=http.HTTPStatus.CONFLICT,
-            content={
-                "message": "A team with this name already exists in this tournament"
-            },
+            content={"message": message},
         )
 
     if db_team is None:

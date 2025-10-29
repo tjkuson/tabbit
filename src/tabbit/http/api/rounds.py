@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tabbit.database.operations import round as crud
 from tabbit.database.schemas import round as db_schemas
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
 from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
@@ -50,9 +51,10 @@ async def create_round(
         round_id = RoundID(id=await crud.create_round(session, db_round))
     except IntegrityError as exc:
         logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
         return JSONResponse(
             status_code=http.HTTPStatus.CONFLICT,
-            content={"message": "Round with this sequence already exists"},
+            content={"message": message},
         )
     logger.info("Created round.", extra={"round_id": round_id})
     return JSONResponse(content=jsonable_encoder(round_id))
@@ -132,9 +134,10 @@ async def patch_round(
         db_round = await crud.patch_round(session, round_id, db_patch)
     except IntegrityError as exc:
         logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
         return JSONResponse(
             status_code=http.HTTPStatus.CONFLICT,
-            content={"message": "Round with this sequence already exists"},
+            content={"message": message},
         )
 
     if db_round is None:
