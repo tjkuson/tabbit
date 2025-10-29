@@ -1,11 +1,14 @@
+import sqlite3
 from collections.abc import AsyncGenerator
 from typing import Final
 from typing import Self
 from typing import final
 
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.pool import ConnectionPoolEntry
 
 from tabbit.config.settings import Settings
 from tabbit.config.settings import settings
@@ -37,6 +40,17 @@ class SessionManager:
         self.engine = create_async_engine(
             database_url,
         )
+
+        @event.listens_for(self.engine.sync_engine, "connect")
+        def enable_foreign_keys(
+            dbapi_conn: sqlite3.Connection,
+            _connection_record: ConnectionPoolEntry,
+        ) -> None:
+            """Enable foreign key support for SQLite connections."""
+            cursor = dbapi_conn.cursor()
+            _ = cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+
         self.sessionmaker = async_sessionmaker(
             bind=self.engine,
             expire_on_commit=False,
