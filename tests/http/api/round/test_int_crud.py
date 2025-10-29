@@ -426,7 +426,9 @@ async def test_api_round_create_duplicate_sequence_in_tournament(
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
-    assert response.json() == {"message": "Round with this sequence already exists"}
+    assert response.json() == {
+        "message": "A round with this sequence already exists in this tournament"
+    }
 
 
 @pytest.mark.asyncio
@@ -475,4 +477,6 @@ async def test_api_round_patch_duplicate_sequence_in_tournament(
         json={"sequence": ROUND_SEQUENCE},
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
-    assert response.json() == {"message": "Round with this sequence already exists"}
+    assert response.json() == {
+        "message": "A round with this sequence already exists in this tournament"
+    }

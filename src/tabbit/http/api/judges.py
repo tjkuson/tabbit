@@ -16,6 +16,7 @@ from tabbit.database.operations import judge as crud
 from tabbit.database.schemas.judge import JudgeCreate as DBJudgeCreate
 from tabbit.database.schemas.judge import ListJudgesQuery as DBListJudgesQuery
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
 from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
@@ -51,9 +52,10 @@ async def create_judge(
         judge_id = JudgeID(id=await crud.create_judge(session, db_judge))
     except IntegrityError as exc:
         logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
         return JSONResponse(
             status_code=http.HTTPStatus.CONFLICT,
-            content={"message": "Database constraint violated"},
+            content={"message": message},
         )
     logger.info("Created judge.", extra={"judge_id": judge_id})
     return JSONResponse(content=jsonable_encoder(judge_id))

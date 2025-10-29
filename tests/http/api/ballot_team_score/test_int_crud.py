@@ -416,5 +416,5 @@ async def test_api_ballot_team_score_create_duplicate_ballot_team(
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
     assert response.json() == {
-        "message": "Team score for the team in this ballot already exist"
+        "message": "This team already has a score recorded for this ballot"
     }

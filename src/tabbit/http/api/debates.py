@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tabbit.database.operations import debate as crud
 from tabbit.database.schemas.debate import ListDebatesQuery as DBListDebatesQuery
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
 from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
@@ -49,9 +50,10 @@ async def create_debate(
         debate_id = DebateID(id=await crud.create_debate(session, debate.round_id))
     except IntegrityError as exc:
         logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
         return JSONResponse(
             status_code=http.HTTPStatus.CONFLICT,
-            content={"message": "Database constraint violated"},
+            content={"message": message},
         )
     logger.info("Created debate.", extra={"debate_id": debate_id})
     return JSONResponse(content=jsonable_encoder(debate_id))
