@@ -10,8 +10,9 @@ from typing import final
 
 
 @final
-class UnsetT(enum.Enum):
+class _UnsetT(enum.Enum):
     UNSET = enum.auto()
 
 
-Unset: Final = UnsetT.UNSET
+Unset: Final = _UnsetT.UNSET
+type UnsetT = _UnsetT
