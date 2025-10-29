@@ -11,6 +11,7 @@ from fastapi import Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import ballot as crud
@@ -18,6 +19,7 @@ from tabbit.database.schemas.ballot import BallotCreate as DBBallotCreate
 from tabbit.database.schemas.ballot import ListBallotsQuery as DBListBallotsQuery
 from tabbit.database.session import session_manager
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.ballot import Ballot
 from tabbit.http.api.schemas.ballot import BallotCreate
@@ -35,6 +37,7 @@ ballots_router: Final = APIRouter(
 @ballots_router.post(
     "/create",
     response_model=BallotID,
+    responses=conflict_response("Database constraint violated"),
 )
 async def create_ballot(
     ballot: BallotCreate,
@@ -42,10 +45,17 @@ async def create_ballot(
 ) -> JSONResponse:
     """Create a ballot.
 
-    Returns the ballot ID upon creation.
+    Returns the ballot ID upon creation, or 409 Conflict if constraints are violated.
     """
     db_ballot = DBBallotCreate(**ballot.model_dump())
-    ballot_id = BallotID(id=await crud.create_ballot(session, db_ballot))
+    try:
+        ballot_id = BallotID(id=await crud.create_ballot(session, db_ballot))
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={"message": "Database constraint violated"},
+        )
     logger.info("Created ballot.", extra={"ballot_id": ballot_id})
     return JSONResponse(content=jsonable_encoder(ballot_id))
 
