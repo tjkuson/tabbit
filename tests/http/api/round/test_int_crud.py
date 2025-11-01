@@ -301,6 +301,76 @@ async def test_round_list_status_filter(
 
 
 @pytest.mark.asyncio
+async def test_round_list_tournament_filter(client: httpx.AsyncClient) -> None:
+    # Create two tournaments with rounds
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={"name": "Tournament 1", "abbreviation": "T1"},
+    )
+    tournament1_id = response.json()["id"]
+    response = await client.post(
+        "/v1/round/create",
+        json={
+            "name": "Round 1",
+            "tournament_id": tournament1_id,
+            "sequence": 1,
+            "status": "draft",
+        },
+    )
+    round1_id = response.json()["id"]
+
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={"name": "Tournament 2", "abbreviation": "T2"},
+    )
+    tournament2_id = response.json()["id"]
+    response = await client.post(
+        "/v1/round/create",
+        json={
+            "name": "Round 1",
+            "tournament_id": tournament2_id,
+            "sequence": 1,
+            "status": "draft",
+        },
+    )
+    round2_id = response.json()["id"]
+
+    # Filter by tournament 1
+    response = await client.get("/v1/round/", params={"tournament_id": tournament1_id})
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == round1_id
+
+    # Filter by tournament 2
+    response = await client.get("/v1/round/", params={"tournament_id": tournament2_id})
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == round2_id
+
+
+@pytest.mark.asyncio
+async def test_api_round_patch_name(client: httpx.AsyncClient) -> None:
+    _tournament_id, round_id = await _setup_data(client)
+    new_name = "Updated Round Name"
+    response = await client.patch(
+        f"/v1/round/{round_id}",
+        json={"name": new_name},
+    )
+    assert response.status_code == http.HTTPStatus.OK
+    assert response.json()["name"] == new_name
+
+
+@pytest.mark.asyncio
+async def test_api_round_patch_status(client: httpx.AsyncClient) -> None:
+    _tournament_id, round_id = await _setup_data(client)
+    new_status = "ready"
+    response = await client.patch(
+        f"/v1/round/{round_id}",
+        json={"status": new_status},
+    )
+    assert response.status_code == http.HTTPStatus.OK
+    assert response.json()["status"] == new_status
+
+
+@pytest.mark.asyncio
 async def test_api_round_get_missing(client: httpx.AsyncClient) -> None:
     response = await client.get("/v1/round/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
