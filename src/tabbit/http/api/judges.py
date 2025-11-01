@@ -9,13 +9,16 @@ from fastapi import Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import judge as crud
 from tabbit.database.schemas.judge import JudgeCreate as DBJudgeCreate
 from tabbit.database.schemas.judge import ListJudgesQuery as DBListJudgesQuery
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.judge import Judge
 from tabbit.http.api.schemas.judge import JudgeCreate
@@ -34,6 +37,7 @@ judges_router: Final = APIRouter(
 @judges_router.post(
     "/create",
     response_model=JudgeID,
+    responses=conflict_response("Database constraint violated"),
 )
 async def create_judge(
     judge: JudgeCreate,
@@ -41,10 +45,18 @@ async def create_judge(
 ) -> JSONResponse:
     """Create a judge.
 
-    Returns the judge ID upon creation.
+    Returns the judge ID upon creation, or 409 Conflict if constraints are violated.
     """
     db_judge = DBJudgeCreate(**judge.model_dump())
-    judge_id = JudgeID(id=await crud.create_judge(session, db_judge))
+    try:
+        judge_id = JudgeID(id=await crud.create_judge(session, db_judge))
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={"message": message},
+        )
     logger.info("Created judge.", extra={"judge_id": judge_id})
     return JSONResponse(content=jsonable_encoder(judge_id))
 

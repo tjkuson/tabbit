@@ -22,6 +22,7 @@ from tabbit.database.schemas.ballot_team_score import (
     ListBallotTeamScoreQuery as DBListBallotTeamScoreQuery,
 )
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
 from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
@@ -58,9 +59,10 @@ async def create_ballot_team_score(
         )
     except IntegrityError as exc:
         logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
         return JSONResponse(
             status_code=http.HTTPStatus.CONFLICT,
-            content={"message": "Team score for the team in this ballot already exist"},
+            content={"message": message},
         )
     logger.info(
         "Created ballot team score.",

@@ -22,6 +22,7 @@ from tabbit.database.schemas.ballot_speaker_points import (
     ListBallotSpeakerPointsQuery as DBListBallotSpeakerPointsQuery,
 )
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
 from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
@@ -64,11 +65,10 @@ async def create_ballot_speaker_points(
         )
     except IntegrityError as exc:
         logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
         return JSONResponse(
             status_code=http.HTTPStatus.CONFLICT,
-            content={
-                "message": "Speaker points for the speaker in this ballot already exist"
-            },
+            content={"message": message},
         )
     logger.info(
         "Created ballot speaker points.",

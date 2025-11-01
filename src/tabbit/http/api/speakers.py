@@ -9,13 +9,16 @@ from fastapi import Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import speaker as crud
 from tabbit.database.schemas.speaker import ListSpeakersQuery as DBListSpeakersQuery
 from tabbit.database.schemas.speaker import SpeakerCreate as DBSpeakerCreate
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.speaker import ListSpeakersQuery
 from tabbit.http.api.schemas.speaker import Speaker
@@ -34,6 +37,7 @@ speakers_router: Final = APIRouter(
 @speakers_router.post(
     "/create",
     response_model=SpeakerID,
+    responses=conflict_response("Database constraint violated"),
 )
 async def create_speaker(
     speaker: SpeakerCreate,
@@ -41,10 +45,18 @@ async def create_speaker(
 ) -> JSONResponse:
     """Create a speaker.
 
-    Returns the speaker ID upon creation.
+    Returns the speaker ID upon creation, or 409 Conflict if constraints are violated.
     """
     db_speaker = DBSpeakerCreate(**speaker.model_dump())
-    speaker_id = SpeakerID(id=await crud.create_speaker(session, db_speaker))
+    try:
+        speaker_id = SpeakerID(id=await crud.create_speaker(session, db_speaker))
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={"message": message},
+        )
     logger.info("Created speaker.", extra={"speaker_id": speaker_id})
     return JSONResponse(content=jsonable_encoder(speaker_id))
 
