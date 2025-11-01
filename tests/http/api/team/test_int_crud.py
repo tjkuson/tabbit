@@ -229,6 +229,42 @@ async def test_team_list_name_filter(
 
 
 @pytest.mark.asyncio
+async def test_team_list_tournament_filter(client: httpx.AsyncClient) -> None:
+    # Create two tournaments with teams
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={"name": "Tournament 1", "abbreviation": "T1"},
+    )
+    tournament1_id = response.json()["id"]
+    response = await client.post(
+        "/v1/team/create",
+        json={"name": "Team 1", "tournament_id": tournament1_id},
+    )
+    team1_id = response.json()["id"]
+
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={"name": "Tournament 2", "abbreviation": "T2"},
+    )
+    tournament2_id = response.json()["id"]
+    response = await client.post(
+        "/v1/team/create",
+        json={"name": "Team 2", "tournament_id": tournament2_id},
+    )
+    team2_id = response.json()["id"]
+
+    # Filter by tournament 1
+    response = await client.get("/v1/team/", params={"tournament_id": tournament1_id})
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == team1_id
+
+    # Filter by tournament 2
+    response = await client.get("/v1/team/", params={"tournament_id": tournament2_id})
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == team2_id
+
+
+@pytest.mark.asyncio
 async def test_api_team_get_missing(client: httpx.AsyncClient) -> None:
     response = await client.get("/v1/team/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND

@@ -234,6 +234,73 @@ async def test_debate_list_limit(
 
 
 @pytest.mark.asyncio
+async def test_api_debate_patch_empty(client: httpx.AsyncClient) -> None:
+    """Test patching a debate with no fields (should not change anything)."""
+    _tournament_id, round_id, debate_id = await _setup_data(client)
+    response = await client.patch(
+        f"/v1/debate/{debate_id}",
+        json={},
+    )
+    assert response.status_code == http.HTTPStatus.OK
+    assert response.json() == {
+        "id": debate_id,
+        "round_id": round_id,
+    }
+
+
+@pytest.mark.asyncio
+async def test_debate_list_round_filter(client: httpx.AsyncClient) -> None:
+    # Create two rounds with debates
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={"name": TOURNAMENT_NAME, "abbreviation": TOURNAMENT_ABBREVIATION},
+    )
+    tournament_id = response.json()["id"]
+
+    response = await client.post(
+        "/v1/round/create",
+        json={
+            "name": "Round 1",
+            "tournament_id": tournament_id,
+            "sequence": 1,
+            "status": "draft",
+        },
+    )
+    round1_id = response.json()["id"]
+    response = await client.post(
+        "/v1/debate/create",
+        json={"round_id": round1_id},
+    )
+    debate1_id = response.json()["id"]
+
+    response = await client.post(
+        "/v1/round/create",
+        json={
+            "name": "Round 2",
+            "tournament_id": tournament_id,
+            "sequence": 2,
+            "status": "draft",
+        },
+    )
+    round2_id = response.json()["id"]
+    response = await client.post(
+        "/v1/debate/create",
+        json={"round_id": round2_id},
+    )
+    debate2_id = response.json()["id"]
+
+    # Filter by round 1
+    response = await client.get("/v1/debate/", params={"round_id": round1_id})
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == debate1_id
+
+    # Filter by round 2
+    response = await client.get("/v1/debate/", params={"round_id": round2_id})
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == debate2_id
+
+
+@pytest.mark.asyncio
 async def test_api_debate_get_missing(client: httpx.AsyncClient) -> None:
     response = await client.get("/v1/debate/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
