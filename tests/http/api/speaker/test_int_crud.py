@@ -252,6 +252,64 @@ async def test_speaker_list_name_filter(
 
 
 @pytest.mark.asyncio
+async def test_api_speaker_patch_empty(client: httpx.AsyncClient) -> None:
+    """Test patching a speaker with no fields (should not change anything)."""
+    _tournament_id, team_id, speaker_id = await _setup_data(client)
+    response = await client.patch(
+        f"/v1/speaker/{speaker_id}",
+        json={},
+    )
+    assert response.status_code == http.HTTPStatus.OK
+    assert response.json() == {
+        "id": speaker_id,
+        "name": SPEAKER_NAME,
+        "team_id": team_id,
+    }
+
+
+@pytest.mark.asyncio
+async def test_speaker_list_team_filter(client: httpx.AsyncClient) -> None:
+    # Create two teams with speakers
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={"name": TOURNAMENT_NAME, "abbreviation": TOURNAMENT_ABBREVIATION},
+    )
+    tournament_id = response.json()["id"]
+
+    response = await client.post(
+        "/v1/team/create",
+        json={"name": "Team 1", "tournament_id": tournament_id},
+    )
+    team1_id = response.json()["id"]
+    response = await client.post(
+        "/v1/speaker/create",
+        json={"name": "Speaker 1", "team_id": team1_id},
+    )
+    speaker1_id = response.json()["id"]
+
+    response = await client.post(
+        "/v1/team/create",
+        json={"name": "Team 2", "tournament_id": tournament_id},
+    )
+    team2_id = response.json()["id"]
+    response = await client.post(
+        "/v1/speaker/create",
+        json={"name": "Speaker 2", "team_id": team2_id},
+    )
+    speaker2_id = response.json()["id"]
+
+    # Filter by team 1
+    response = await client.get("/v1/speaker/", params={"team_id": team1_id})
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == speaker1_id
+
+    # Filter by team 2
+    response = await client.get("/v1/speaker/", params={"team_id": team2_id})
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == speaker2_id
+
+
+@pytest.mark.asyncio
 async def test_api_speaker_get_missing(client: httpx.AsyncClient) -> None:
     response = await client.get("/v1/speaker/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND

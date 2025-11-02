@@ -182,6 +182,18 @@ async def test_tournament_list_name_filter(
 
 
 @pytest.mark.asyncio
+async def test_api_tournament_patch_name(client: httpx.AsyncClient) -> None:
+    tournament_id = await _setup_data(client)
+    new_name = "Updated Tournament Name"
+    response = await client.patch(
+        f"/v1/tournaments/{tournament_id}",
+        json={"name": new_name},
+    )
+    assert response.status_code == http.HTTPStatus.OK
+    assert response.json()["name"] == new_name
+
+
+@pytest.mark.asyncio
 async def test_api_tournament_get_missing(client: httpx.AsyncClient) -> None:
     response = await client.get("/v1/tournaments/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND

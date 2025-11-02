@@ -216,6 +216,58 @@ async def test_judge_list_name_filter(
 
 
 @pytest.mark.asyncio
+async def test_api_judge_patch_empty(client: httpx.AsyncClient) -> None:
+    """Test patching a judge with no fields (should not change anything)."""
+    tournament_id, judge_id = await _setup_data(client)
+    response = await client.patch(
+        f"/v1/judge/{judge_id}",
+        json={},
+    )
+    assert response.status_code == http.HTTPStatus.OK
+    assert response.json() == {
+        "id": judge_id,
+        "name": JUDGE_NAME,
+        "tournament_id": tournament_id,
+    }
+
+
+@pytest.mark.asyncio
+async def test_judge_list_tournament_filter(client: httpx.AsyncClient) -> None:
+    # Create two tournaments with judges
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={"name": "Tournament 1", "abbreviation": "T1"},
+    )
+    tournament1_id = response.json()["id"]
+    response = await client.post(
+        "/v1/judge/create",
+        json={"name": "Judge 1", "tournament_id": tournament1_id},
+    )
+    judge1_id = response.json()["id"]
+
+    response = await client.post(
+        "/v1/tournaments/create",
+        json={"name": "Tournament 2", "abbreviation": "T2"},
+    )
+    tournament2_id = response.json()["id"]
+    response = await client.post(
+        "/v1/judge/create",
+        json={"name": "Judge 2", "tournament_id": tournament2_id},
+    )
+    judge2_id = response.json()["id"]
+
+    # Filter by tournament 1
+    response = await client.get("/v1/judge/", params={"tournament_id": tournament1_id})
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == judge1_id
+
+    # Filter by tournament 2
+    response = await client.get("/v1/judge/", params={"tournament_id": tournament2_id})
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] == judge2_id
+
+
+@pytest.mark.asyncio
 async def test_api_judge_get_missing(client: httpx.AsyncClient) -> None:
     response = await client.get("/v1/judge/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
