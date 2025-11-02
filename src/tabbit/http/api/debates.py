@@ -9,12 +9,15 @@ from fastapi import Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import debate as crud
 from tabbit.database.schemas.debate import ListDebatesQuery as DBListDebatesQuery
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.debate import Debate
 from tabbit.http.api.schemas.debate import DebateCreate
@@ -33,6 +36,7 @@ debates_router: Final = APIRouter(
 @debates_router.post(
     "/create",
     response_model=DebateID,
+    responses=conflict_response("Database constraint violated"),
 )
 async def create_debate(
     debate: DebateCreate,
@@ -40,9 +44,17 @@ async def create_debate(
 ) -> JSONResponse:
     """Create a debate.
 
-    Returns the debate ID upon creation.
+    Returns the debate ID upon creation, or 409 Conflict if constraints are violated.
     """
-    debate_id = DebateID(id=await crud.create_debate(session, debate.round_id))
+    try:
+        debate_id = DebateID(id=await crud.create_debate(session, debate.round_id))
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={"message": message},
+        )
     logger.info("Created debate.", extra={"debate_id": debate_id})
     return JSONResponse(content=jsonable_encoder(debate_id))
 

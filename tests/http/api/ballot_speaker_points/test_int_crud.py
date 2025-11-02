@@ -477,5 +477,5 @@ async def test_api_ballot_speaker_points_create_duplicate_ballot_speaker(
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
     assert response.json() == {
-        "message": "Speaker points for the speaker in this ballot already exist"
+        "message": "This speaker already has points recorded for this ballot"
     }
