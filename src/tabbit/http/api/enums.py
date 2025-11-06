@@ -12,5 +12,6 @@ class Tags(enum.StrEnum):
     MOTION = "motion"
     ROUND = "round"
     SPEAKER = "speaker"
+    TAG = "tag"
     TEAM = "team"
     TOURNAMENT = "tournament"

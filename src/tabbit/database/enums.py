@@ -9,9 +9,12 @@ class TableName(enum.StrEnum):
     BALLOT_TEAM_SCORE = "ballot_team_score"
     DEBATE = "debate"
     JUDGE = "judge"
+    JUDGE_TAG = "judge_tag"
     MOTION = "motion"
     ROUND = "round"
     SPEAKER = "speaker"
+    SPEAKER_TAG = "speaker_tag"
+    TAG = "tag"
     TEAM = "team"
     TOURNAMENT = "tournament"
 

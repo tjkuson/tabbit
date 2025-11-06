@@ -19,6 +19,18 @@ _UNIQUE_CONSTRAINT_PATTERNS: Final = (
         "ballot_team_score.ballot_id, ballot_team_score.team_id",
         "This team already has a score recorded for this ballot",
     ),
+    (
+        "tag.tournament_id, tag.name",
+        "A tag with this name already exists in this tournament",
+    ),
+    (
+        "speaker_tag.speaker_id, speaker_tag.tag_id",
+        "This speaker is already associated with this tag",
+    ),
+    (
+        "judge_tag.judge_id, judge_tag.tag_id",
+        "This judge is already associated with this tag",
+    ),
 )
 _UNIQUE_CONSTRAINT_MESSAGES: Final = {
     f"UNIQUE constraint failed: {key}": value

@@ -42,6 +42,10 @@ class Tournament(Base):
         back_populates="tournament",
         cascade="all, delete-orphan",
     )
+    tags: Mapped[list[Tag]] = relationship(
+        back_populates="tournament",
+        cascade="all, delete-orphan",
+    )
 
 
 @final
@@ -76,6 +80,10 @@ class Speaker(Base):
         back_populates="speaker",
         cascade="all, delete-orphan",
     )
+    tags: Mapped[list[Tag]] = relationship(
+        secondary=TableName.SPEAKER_TAG,
+        back_populates="speakers",
+    )
 
 
 @final
@@ -90,6 +98,10 @@ class Judge(Base):
     ballots: Mapped[list[Ballot]] = relationship(
         back_populates="judge",
         cascade="all, delete-orphan",
+    )
+    tags: Mapped[list[Tag]] = relationship(
+        secondary=TableName.JUDGE_TAG,
+        back_populates="judges",
     )
 
 
@@ -130,6 +142,28 @@ class Motion(Base):
     infoslide: Mapped[str | None]
 
     round: Mapped[Round] = relationship(back_populates="motions")
+
+
+@final
+class Tag(Base):
+    __tablename__ = TableName.TAG
+    __table_args__ = (
+        UniqueConstraint("tournament_id", "name", name="uq_tag_tournament_name"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    tournament_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.TOURNAMENT}.id"))
+    name: Mapped[str]
+
+    tournament: Mapped[Tournament] = relationship(back_populates="tags")
+    speakers: Mapped[list[Speaker]] = relationship(
+        secondary=TableName.SPEAKER_TAG,
+        back_populates="tags",
+    )
+    judges: Mapped[list[Judge]] = relationship(
+        secondary=TableName.JUDGE_TAG,
+        back_populates="tags",
+    )
 
 
 @final
@@ -196,3 +230,23 @@ class BallotTeamScore(Base):
 
     ballot: Mapped[Ballot] = relationship(back_populates="ballot_team_scores")
     team: Mapped[Team] = relationship()
+
+
+@final
+class SpeakerTag(Base):
+    __tablename__ = TableName.SPEAKER_TAG
+    __table_args__ = (UniqueConstraint("speaker_id", "tag_id", name="uq_speaker_tag"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    speaker_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.SPEAKER}.id"))
+    tag_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.TAG}.id"))
+
+
+@final
+class JudgeTag(Base):
+    __tablename__ = TableName.JUDGE_TAG
+    __table_args__ = (UniqueConstraint("judge_id", "tag_id", name="uq_judge_tag"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    judge_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.JUDGE}.id"))
+    tag_id: Mapped[int] = mapped_column(ForeignKey(f"{TableName.TAG}.id"))
