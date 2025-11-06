@@ -2,8 +2,8 @@
 
 ## Development
 
-Tabbit is written in Python. You will need to install [uv], which is used to
-manage the project.
+Tabbit is written in Python. You will need [uv], which is used to manage the
+project.
 
 Optionally, you can use [pre-commit] to install pre-commit hooks that run checks
 whilst making a commit.
@@ -16,8 +16,8 @@ pre-commit install
 When sending a patch, ensure code passes checks and the test suite.
 
 ```shell
-uv run --frozen pytest
-uv run --frozen mypy src tests
+uv run pytest
+uv run mypy src tests
 pre-commit run --all-files
 ```
 
@@ -37,25 +37,25 @@ To measure coverage with [coverage.py], first, make sure that previous coverage
 data has been deleted by running
 
 ```shell
-uv run --frozen coverage erase
+uv run coverage erase
 ```
 
 Then, run the tests via `coverage` by running
 
 ```shell
-uv run --frozen coverage run -m pytest -n logical
+uv run coverage run -m pytest -n logical
 ```
 
 Combine the per-process coverage data by running
 
 ```shell
-uv run --froezn coverage combine
+uv run coverage combine
 ```
 
 and then review the report with
 
 ```shell
-uv run --frozen coverage report
+uv run coverage report
 ```
 
 ### Typing
