@@ -6,19 +6,16 @@ from fastapi import FastAPI
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import Response
 
 from tabbit.http.api.root import api_router
 from tabbit.http.root import root_router
 from tabbit.http.views.root import views_router
+from tabbit.http.views.templating import templates
 
 _VIEWS_DIR: Final = Path(__file__).parent / "http" / "views"
-_TEMPLATES_DIR: Final = _VIEWS_DIR / "templates"
 _STATIC_DIR: Final = _VIEWS_DIR / "static"
-
-_templates: Final = Jinja2Templates(directory=_TEMPLATES_DIR)
 
 
 def setup_app() -> FastAPI:
@@ -47,7 +44,7 @@ def setup_app() -> FastAPI:
                 content={"detail": exc.detail},
             )
         else:
-            return _templates.TemplateResponse(
+            return templates.TemplateResponse(
                 request=request,
                 name="404.html",
                 status_code=http.HTTPStatus.NOT_FOUND,
