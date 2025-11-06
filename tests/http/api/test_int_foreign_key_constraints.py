@@ -383,3 +383,19 @@ async def test_api_ballot_team_score_create_invalid_team_id(
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
     assert response.json()["message"] == "Referenced resource does not exist"
+
+
+@pytest.mark.asyncio
+async def test_api_tag_create_invalid_tournament_id(
+    client: httpx.AsyncClient,
+) -> None:
+    """Creating a tag with non-existent tournament_id returns 409 Conflict."""
+    response = await client.post(
+        "/v1/tag/create",
+        json={
+            "name": "Test Tag",
+            "tournament_id": NONEXISTENT_ID,
+        },
+    )
+    assert response.status_code == http.HTTPStatus.CONFLICT
+    assert response.json()["message"] == "Referenced resource does not exist"

@@ -10,6 +10,7 @@ from tabbit.http.api.judges import judges_router
 from tabbit.http.api.motions import motions_router
 from tabbit.http.api.rounds import rounds_router
 from tabbit.http.api.speakers import speakers_router
+from tabbit.http.api.tags import tags_router
 from tabbit.http.api.teams import teams_router
 from tabbit.http.api.tournaments import tournaments_router
 
@@ -22,5 +23,6 @@ api_router.include_router(judges_router)
 api_router.include_router(motions_router)
 api_router.include_router(rounds_router)
 api_router.include_router(speakers_router)
+api_router.include_router(tags_router)
 api_router.include_router(teams_router)
 api_router.include_router(tournaments_router)
