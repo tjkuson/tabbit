@@ -16,7 +16,7 @@ BALLOT_VERSION: Final = 1
 
 async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int]:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": TOURNAMENT_NAME,
             "abbreviation": TOURNAMENT_ABBREVIATION,
@@ -26,7 +26,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int]:
     assert isinstance(tournament_id, int)
 
     response = await client.post(
-        "/v1/judge/create",
+        "/api/v1/judge/create",
         json={
             "name": JUDGE_NAME,
             "tournament_id": tournament_id,
@@ -36,7 +36,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int]:
     assert isinstance(judge_id, int)
 
     response = await client.post(
-        "/v1/round/create",
+        "/api/v1/round/create",
         json={
             "name": ROUND_NAME,
             "abbreviation": ROUND_ABBREVIATION,
@@ -49,7 +49,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int]:
     assert isinstance(round_id, int)
 
     response = await client.post(
-        "/v1/debate/create",
+        "/api/v1/debate/create",
         json={
             "round_id": round_id,
         },
@@ -64,7 +64,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int]:
 async def test_api_ballot_create(client: httpx.AsyncClient) -> None:
     _tournament_id, judge_id, debate_id, _round_id = await _setup_data(client)
     response = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id,
             "judge_id": judge_id,
@@ -78,7 +78,7 @@ async def test_api_ballot_create(client: httpx.AsyncClient) -> None:
 async def test_api_ballot_read(client: httpx.AsyncClient) -> None:
     _tournament_id, judge_id, debate_id, _round_id = await _setup_data(client)
     response = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id,
             "judge_id": judge_id,
@@ -86,7 +86,7 @@ async def test_api_ballot_read(client: httpx.AsyncClient) -> None:
         },
     )
     ballot_id = response.json()["id"]
-    response = await client.get(f"/v1/ballot/{ballot_id}")
+    response = await client.get(f"/api/v1/ballot/{ballot_id}")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json() == {
         "id": ballot_id,
@@ -100,7 +100,7 @@ async def test_api_ballot_read(client: httpx.AsyncClient) -> None:
 async def test_api_ballot_delete(client: httpx.AsyncClient) -> None:
     _tournament_id, judge_id, debate_id, _round_id = await _setup_data(client)
     response = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id,
             "judge_id": judge_id,
@@ -108,17 +108,17 @@ async def test_api_ballot_delete(client: httpx.AsyncClient) -> None:
         },
     )
     ballot_id = response.json()["id"]
-    response = await client.delete(f"/v1/ballot/{ballot_id}")
+    response = await client.delete(f"/api/v1/ballot/{ballot_id}")
     assert response.status_code == http.HTTPStatus.NO_CONTENT
 
     # Check the deleted ballot cannot be found.
-    response = await client.get(f"/v1/ballot/{ballot_id}")
+    response = await client.get(f"/api/v1/ballot/{ballot_id}")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_api_ballot_list_empty(client: httpx.AsyncClient) -> None:
-    response = await client.get("/v1/ballot/")
+    response = await client.get("/api/v1/ballot/")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json() == []
 
@@ -127,7 +127,7 @@ async def test_api_ballot_list_empty(client: httpx.AsyncClient) -> None:
 async def test_api_ballot_list(client: httpx.AsyncClient) -> None:
     _tournament_id, judge_id, debate_id, _round_id = await _setup_data(client)
     response = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id,
             "judge_id": judge_id,
@@ -135,7 +135,7 @@ async def test_api_ballot_list(client: httpx.AsyncClient) -> None:
         },
     )
     ballot_id = response.json()["id"]
-    response = await client.get("/v1/ballot/")
+    response = await client.get("/api/v1/ballot/")
     assert response.json() == [
         {
             "id": ballot_id,
@@ -150,7 +150,7 @@ async def test_api_ballot_list(client: httpx.AsyncClient) -> None:
 async def test_api_ballot_list_offset(client: httpx.AsyncClient) -> None:
     _tournament_id, judge_id, debate_id, _round_id = await _setup_data(client)
     _ = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id,
             "judge_id": judge_id,
@@ -158,7 +158,7 @@ async def test_api_ballot_list_offset(client: httpx.AsyncClient) -> None:
         },
     )
     response = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id,
             "judge_id": judge_id,
@@ -166,7 +166,7 @@ async def test_api_ballot_list_offset(client: httpx.AsyncClient) -> None:
         },
     )
     last_ballot_id = response.json()["id"]
-    response = await client.get("/v1/ballot/", params={"offset": 1})
+    response = await client.get("/api/v1/ballot/", params={"offset": 1})
     assert response.json() == [
         {
             "id": last_ballot_id,
@@ -198,14 +198,14 @@ async def test_ballot_list_limit(
     _tournament_id, judge_id, debate_id, _round_id = await _setup_data(client)
     for idx in range(insert_n):
         _ = await client.post(
-            "/v1/ballot/create",
+            "/api/v1/ballot/create",
             json={
                 "debate_id": debate_id,
                 "judge_id": judge_id,
                 "version": idx + 1,
             },
         )
-    response = await client.get("/v1/ballot/", params={"limit": limit})
+    response = await client.get("/api/v1/ballot/", params={"limit": limit})
     assert len(response.json()) == expect_n
 
 
@@ -214,7 +214,7 @@ async def test_api_ballot_list_filter_debate_id(client: httpx.AsyncClient) -> No
     _tournament_id, judge_id, debate_id_1, round_id = await _setup_data(client)
     # Create second debate
     response = await client.post(
-        "/v1/debate/create",
+        "/api/v1/debate/create",
         json={
             "round_id": round_id,
         },
@@ -222,7 +222,7 @@ async def test_api_ballot_list_filter_debate_id(client: httpx.AsyncClient) -> No
     debate_id_2 = response.json()["id"]
 
     ballot_id_1 = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id_1,
             "judge_id": judge_id,
@@ -232,7 +232,7 @@ async def test_api_ballot_list_filter_debate_id(client: httpx.AsyncClient) -> No
     ballot_id_1 = ballot_id_1.json()["id"]
 
     ballot_id_2 = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id_2,
             "judge_id": judge_id,
@@ -242,7 +242,7 @@ async def test_api_ballot_list_filter_debate_id(client: httpx.AsyncClient) -> No
     ballot_id_2 = ballot_id_2.json()["id"]
 
     response = await client.get(
-        "/v1/ballot/",
+        "/api/v1/ballot/",
         params={"debate_id": debate_id_1},
     )
     assert len(response.json()) == 1
@@ -250,7 +250,7 @@ async def test_api_ballot_list_filter_debate_id(client: httpx.AsyncClient) -> No
     assert response.json()[0]["debate_id"] == debate_id_1
 
     response = await client.get(
-        "/v1/ballot/",
+        "/api/v1/ballot/",
         params={"debate_id": debate_id_2},
     )
     assert len(response.json()) == 1
@@ -264,7 +264,7 @@ async def test_api_ballot_list_filter_judge_id(client: httpx.AsyncClient) -> Non
 
     # Create second judge
     response = await client.post(
-        "/v1/judge/create",
+        "/api/v1/judge/create",
         json={
             "name": "Judge Two",
             "tournament_id": tournament_id,
@@ -273,7 +273,7 @@ async def test_api_ballot_list_filter_judge_id(client: httpx.AsyncClient) -> Non
     judge_id_2 = response.json()["id"]
 
     ballot_id_1 = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id,
             "judge_id": judge_id_1,
@@ -283,7 +283,7 @@ async def test_api_ballot_list_filter_judge_id(client: httpx.AsyncClient) -> Non
     ballot_id_1 = ballot_id_1.json()["id"]
 
     ballot_id_2 = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id,
             "judge_id": judge_id_2,
@@ -293,7 +293,7 @@ async def test_api_ballot_list_filter_judge_id(client: httpx.AsyncClient) -> Non
     ballot_id_2 = ballot_id_2.json()["id"]
 
     response = await client.get(
-        "/v1/ballot/",
+        "/api/v1/ballot/",
         params={"judge_id": judge_id_1},
     )
     assert len(response.json()) == 1
@@ -301,7 +301,7 @@ async def test_api_ballot_list_filter_judge_id(client: httpx.AsyncClient) -> Non
     assert response.json()[0]["judge_id"] == judge_id_1
 
     response = await client.get(
-        "/v1/ballot/",
+        "/api/v1/ballot/",
         params={"judge_id": judge_id_2},
     )
     assert len(response.json()) == 1
@@ -311,11 +311,11 @@ async def test_api_ballot_list_filter_judge_id(client: httpx.AsyncClient) -> Non
 
 @pytest.mark.asyncio
 async def test_api_ballot_get_missing(client: httpx.AsyncClient) -> None:
-    response = await client.get("/v1/ballot/1")
+    response = await client.get("/api/v1/ballot/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_api_ballot_delete_missing(client: httpx.AsyncClient) -> None:
-    response = await client.delete("/v1/ballot/1")
+    response = await client.delete("/api/v1/ballot/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND

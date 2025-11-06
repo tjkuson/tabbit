@@ -10,7 +10,7 @@ ABBREVIATION: Final = "WUDC 2026"
 
 async def _setup_data(client: httpx.AsyncClient) -> int:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": NAME,
             "abbreviation": ABBREVIATION,
@@ -24,7 +24,7 @@ async def _setup_data(client: httpx.AsyncClient) -> int:
 @pytest.mark.asyncio
 async def test_api_tournament_create(client: httpx.AsyncClient) -> None:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": NAME,
             "abbreviation": ABBREVIATION,
@@ -36,7 +36,7 @@ async def test_api_tournament_create(client: httpx.AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_api_tournament_read(client: httpx.AsyncClient) -> None:
     tournament_id = await _setup_data(client)
-    response = await client.get(f"/v1/tournaments/{tournament_id}")
+    response = await client.get(f"/api/v1/tournaments/{tournament_id}")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json() == {
         "id": tournament_id,
@@ -59,7 +59,7 @@ async def test_api_tournament_update(
 ) -> None:
     tournament_id = await _setup_data(client)
     response = await client.patch(
-        f"/v1/tournaments/{tournament_id}",
+        f"/api/v1/tournaments/{tournament_id}",
         json={"abbreviation": abbreviation},
     )
     assert response.status_code == http.HTTPStatus.OK
@@ -70,7 +70,7 @@ async def test_api_tournament_update(
     }
 
     # Check the update persists.
-    response = await client.get(f"/v1/tournaments/{tournament_id}")
+    response = await client.get(f"/api/v1/tournaments/{tournament_id}")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json() == {
         "id": tournament_id,
@@ -82,17 +82,17 @@ async def test_api_tournament_update(
 @pytest.mark.asyncio
 async def test_api_tournament_delete(client: httpx.AsyncClient) -> None:
     tournament_id = await _setup_data(client)
-    response = await client.delete(f"/v1/tournaments/{tournament_id}")
+    response = await client.delete(f"/api/v1/tournaments/{tournament_id}")
     assert response.status_code == http.HTTPStatus.NO_CONTENT
 
     # Check the deleted tournament cannot be found.
-    response = await client.get(f"/v1/tournaments/{tournament_id}")
+    response = await client.get(f"/api/v1/tournaments/{tournament_id}")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_api_tournament_list_empty(client: httpx.AsyncClient) -> None:
-    response = await client.get("/v1/tournaments/")
+    response = await client.get("/api/v1/tournaments/")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json() == []
 
@@ -100,7 +100,7 @@ async def test_api_tournament_list_empty(client: httpx.AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_api_tournament_list(client: httpx.AsyncClient) -> None:
     tournament_id = await _setup_data(client)
-    response = await client.get("/v1/tournaments/")
+    response = await client.get("/api/v1/tournaments/")
     assert response.json() == [
         {
             "id": tournament_id,
@@ -112,13 +112,15 @@ async def test_api_tournament_list(client: httpx.AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_api_tournament_list_offset(client: httpx.AsyncClient) -> None:
-    _ = await client.post("/v1/tournaments/create", json={"name": "Imperial Open 2021"})
+    _ = await client.post(
+        "/api/v1/tournaments/create", json={"name": "Imperial Open 2021"}
+    )
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={"name": "Imperial Open 2022"},
     )
     last_id = response.json()["id"]
-    response = await client.get("/v1/tournaments/", params={"offset": 1})
+    response = await client.get("/api/v1/tournaments/", params={"offset": 1})
     assert response.json() == [
         {
             "id": last_id,
@@ -148,10 +150,10 @@ async def test_tournament_list_limit(
 ) -> None:
     for idx in range(insert_n):
         _ = await client.post(
-            "/v1/tournaments/create",
+            "/api/v1/tournaments/create",
             json={"name": f"Imperial IV {idx}"},
         )
-    response = await client.get("/v1/tournaments/", params={"limit": limit})
+    response = await client.get("/api/v1/tournaments/", params={"limit": limit})
     assert len(response.json()) == expect_n
 
 
@@ -175,8 +177,8 @@ async def test_tournament_list_name_filter(
     expect_names: list[str],
 ) -> None:
     for name in insert_names:
-        _ = await client.post("/v1/tournaments/create", json={"name": name})
-    response = await client.get("/v1/tournaments/", params={"name": name_filter})
+        _ = await client.post("/api/v1/tournaments/create", json={"name": name})
+    response = await client.get("/api/v1/tournaments/", params={"name": name_filter})
     names = [tournament["name"] for tournament in response.json()]
     assert names == expect_names
 
@@ -186,7 +188,7 @@ async def test_api_tournament_patch_name(client: httpx.AsyncClient) -> None:
     tournament_id = await _setup_data(client)
     new_name = "Updated Tournament Name"
     response = await client.patch(
-        f"/v1/tournaments/{tournament_id}",
+        f"/api/v1/tournaments/{tournament_id}",
         json={"name": new_name},
     )
     assert response.status_code == http.HTTPStatus.OK
@@ -195,17 +197,17 @@ async def test_api_tournament_patch_name(client: httpx.AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_api_tournament_get_missing(client: httpx.AsyncClient) -> None:
-    response = await client.get("/v1/tournaments/1")
+    response = await client.get("/api/v1/tournaments/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_api_tournament_delete_missing(client: httpx.AsyncClient) -> None:
-    response = await client.delete("/v1/tournaments/1")
+    response = await client.delete("/api/v1/tournaments/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_api_tournament_patch_missing(client: httpx.AsyncClient) -> None:
-    response = await client.patch("/v1/tournaments/1", json={"abbreviation": None})
+    response = await client.patch("/api/v1/tournaments/1", json={"abbreviation": None})
     assert response.status_code == http.HTTPStatus.NOT_FOUND

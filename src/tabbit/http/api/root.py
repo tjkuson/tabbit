@@ -14,7 +14,7 @@ from tabbit.http.api.tags import tags_router
 from tabbit.http.api.teams import teams_router
 from tabbit.http.api.tournaments import tournaments_router
 
-api_router: Final = APIRouter(prefix="/v1")
+api_router: Final = APIRouter(prefix="/api/v1")
 api_router.include_router(ballot_speaker_points_router)
 api_router.include_router(ballot_team_score_router)
 api_router.include_router(ballots_router)
