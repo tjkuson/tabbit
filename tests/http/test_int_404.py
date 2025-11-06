@@ -17,6 +17,6 @@ async def test_non_api_route_returns_html_404(client: httpx.AsyncClient) -> None
 @pytest.mark.asyncio
 async def test_api_route_returns_json_404(client: httpx.AsyncClient) -> None:
     """API routes return JSON 404 responses."""
-    response = await client.get("/v1/nonexistent")
+    response = await client.get("/api/v1/nonexistent")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
     assert "application/json" in response.headers["content-type"]

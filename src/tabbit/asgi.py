@@ -41,7 +41,7 @@ def setup_app() -> FastAPI:
         if exc.status_code != http.HTTPStatus.NOT_FOUND:  # pragma: no cover
             raise exc
 
-        if request.url.path.startswith("/v1/"):
+        if request.url.path.startswith("/api/v1/"):
             return JSONResponse(
                 status_code=http.HTTPStatus.NOT_FOUND,
                 content={"detail": exc.detail},

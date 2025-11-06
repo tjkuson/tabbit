@@ -17,7 +17,7 @@ MOTION_INFOSLIDE: Final = (
 
 async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int]:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": TOURNAMENT_NAME,
             "abbreviation": TOURNAMENT_ABBREVIATION,
@@ -26,7 +26,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int]:
     tournament_id = response.json()["id"]
     assert isinstance(tournament_id, int)
     response = await client.post(
-        "/v1/round/create",
+        "/api/v1/round/create",
         json={
             "name": ROUND_NAME,
             "tournament_id": tournament_id,
@@ -37,7 +37,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int]:
     round_id = response.json()["id"]
     assert isinstance(round_id, int)
     response = await client.post(
-        "/v1/motion/create",
+        "/api/v1/motion/create",
         json={
             "round_id": round_id,
             "text": MOTION_TEXT,
@@ -52,7 +52,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int]:
 @pytest.mark.asyncio
 async def test_api_motion_create(client: httpx.AsyncClient) -> None:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": TOURNAMENT_NAME,
             "abbreviation": TOURNAMENT_ABBREVIATION,
@@ -60,7 +60,7 @@ async def test_api_motion_create(client: httpx.AsyncClient) -> None:
     )
     tournament_id = response.json()["id"]
     response = await client.post(
-        "/v1/round/create",
+        "/api/v1/round/create",
         json={
             "name": ROUND_NAME,
             "tournament_id": tournament_id,
@@ -70,7 +70,7 @@ async def test_api_motion_create(client: httpx.AsyncClient) -> None:
     )
     round_id = response.json()["id"]
     response = await client.post(
-        "/v1/motion/create",
+        "/api/v1/motion/create",
         json={
             "round_id": round_id,
             "text": MOTION_TEXT,
@@ -83,7 +83,7 @@ async def test_api_motion_create(client: httpx.AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_api_motion_create_without_infoslide(client: httpx.AsyncClient) -> None:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": TOURNAMENT_NAME,
             "abbreviation": TOURNAMENT_ABBREVIATION,
@@ -91,7 +91,7 @@ async def test_api_motion_create_without_infoslide(client: httpx.AsyncClient) ->
     )
     tournament_id = response.json()["id"]
     response = await client.post(
-        "/v1/round/create",
+        "/api/v1/round/create",
         json={
             "name": ROUND_NAME,
             "tournament_id": tournament_id,
@@ -101,7 +101,7 @@ async def test_api_motion_create_without_infoslide(client: httpx.AsyncClient) ->
     )
     round_id = response.json()["id"]
     response = await client.post(
-        "/v1/motion/create",
+        "/api/v1/motion/create",
         json={
             "round_id": round_id,
             "text": MOTION_TEXT,
@@ -112,7 +112,7 @@ async def test_api_motion_create_without_infoslide(client: httpx.AsyncClient) ->
     motion_id = response.json()["id"]
 
     # Verify infoslide is None
-    response = await client.get(f"/v1/motion/{motion_id}")
+    response = await client.get(f"/api/v1/motion/{motion_id}")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json()["infoslide"] is None
 
@@ -120,7 +120,7 @@ async def test_api_motion_create_without_infoslide(client: httpx.AsyncClient) ->
 @pytest.mark.asyncio
 async def test_api_motion_read(client: httpx.AsyncClient) -> None:
     _tournament_id, round_id, motion_id = await _setup_data(client)
-    response = await client.get(f"/v1/motion/{motion_id}")
+    response = await client.get(f"/api/v1/motion/{motion_id}")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json() == {
         "id": motion_id,
@@ -168,7 +168,7 @@ async def test_api_motion_update(
     _tournament_id, round_id, motion_id = await _setup_data(client)
 
     response = await client.patch(
-        f"/v1/motion/{motion_id}",
+        f"/api/v1/motion/{motion_id}",
         json=patch_data,
     )
     assert response.status_code == http.HTTPStatus.OK
@@ -180,7 +180,7 @@ async def test_api_motion_update(
     }
 
     # Read (to check the update persists)
-    response = await client.get(f"/v1/motion/{motion_id}")
+    response = await client.get(f"/api/v1/motion/{motion_id}")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json() == {
         "id": motion_id,
@@ -194,28 +194,28 @@ async def test_api_motion_update(
 async def test_api_round_delete_cascades_to_motion(client: httpx.AsyncClient) -> None:
     """Test that deleting a round cascades to delete its motions."""
     _tournament_id, round_id, motion_id = await _setup_data(client)
-    response = await client.delete(f"/v1/round/{round_id}")
+    response = await client.delete(f"/api/v1/round/{round_id}")
     assert response.status_code == http.HTTPStatus.NO_CONTENT
 
     # Verify motion was cascade deleted
-    response = await client.get(f"/v1/motion/{motion_id}")
+    response = await client.get(f"/api/v1/motion/{motion_id}")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_api_motion_delete(client: httpx.AsyncClient) -> None:
     _tournament_id, _round_id, motion_id = await _setup_data(client)
-    response = await client.delete(f"/v1/motion/{motion_id}")
+    response = await client.delete(f"/api/v1/motion/{motion_id}")
     assert response.status_code == http.HTTPStatus.NO_CONTENT
 
     # Check the deleted motion cannot be found.
-    response = await client.get(f"/v1/motion/{motion_id}")
+    response = await client.get(f"/api/v1/motion/{motion_id}")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_api_motion_list_empty(client: httpx.AsyncClient) -> None:
-    response = await client.get("/v1/motion/")
+    response = await client.get("/api/v1/motion/")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json() == []
 
@@ -223,7 +223,7 @@ async def test_api_motion_list_empty(client: httpx.AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_api_motion_list(client: httpx.AsyncClient) -> None:
     _tournament_id, round_id, motion_id = await _setup_data(client)
-    response = await client.get("/v1/motion/")
+    response = await client.get("/api/v1/motion/")
     assert response.json() == [
         {
             "id": motion_id,
@@ -237,7 +237,7 @@ async def test_api_motion_list(client: httpx.AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_api_motion_list_round_filter(client: httpx.AsyncClient) -> None:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": TOURNAMENT_NAME,
             "abbreviation": TOURNAMENT_ABBREVIATION,
@@ -247,7 +247,7 @@ async def test_api_motion_list_round_filter(client: httpx.AsyncClient) -> None:
 
     # Create two rounds with motions
     response = await client.post(
-        "/v1/round/create",
+        "/api/v1/round/create",
         json={
             "name": "Round 1",
             "tournament_id": tournament_id,
@@ -257,7 +257,7 @@ async def test_api_motion_list_round_filter(client: httpx.AsyncClient) -> None:
     )
     first_round_id = response.json()["id"]
     response = await client.post(
-        "/v1/motion/create",
+        "/api/v1/motion/create",
         json={
             "round_id": first_round_id,
             "text": "First motion",
@@ -267,7 +267,7 @@ async def test_api_motion_list_round_filter(client: httpx.AsyncClient) -> None:
     first_motion_id = response.json()["id"]
 
     response = await client.post(
-        "/v1/round/create",
+        "/api/v1/round/create",
         json={
             "name": "Round 2",
             "tournament_id": tournament_id,
@@ -277,7 +277,7 @@ async def test_api_motion_list_round_filter(client: httpx.AsyncClient) -> None:
     )
     second_round_id = response.json()["id"]
     response = await client.post(
-        "/v1/motion/create",
+        "/api/v1/motion/create",
         json={
             "round_id": second_round_id,
             "text": "Second motion",
@@ -287,13 +287,13 @@ async def test_api_motion_list_round_filter(client: httpx.AsyncClient) -> None:
     second_motion_id = response.json()["id"]
 
     # Test filtering by first round
-    response = await client.get("/v1/motion/", params={"round_id": first_round_id})
+    response = await client.get("/api/v1/motion/", params={"round_id": first_round_id})
     assert len(response.json()) == 1
     assert response.json()[0]["id"] == first_motion_id
     assert response.json()[0]["round_id"] == first_round_id
 
     # Test filtering by second round
-    response = await client.get("/v1/motion/", params={"round_id": second_round_id})
+    response = await client.get("/api/v1/motion/", params={"round_id": second_round_id})
     assert len(response.json()) == 1
     assert response.json()[0]["id"] == second_motion_id
     assert response.json()[0]["round_id"] == second_round_id
@@ -302,7 +302,7 @@ async def test_api_motion_list_round_filter(client: httpx.AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_api_motion_list_offset(client: httpx.AsyncClient) -> None:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": TOURNAMENT_NAME,
             "abbreviation": TOURNAMENT_ABBREVIATION,
@@ -310,7 +310,7 @@ async def test_api_motion_list_offset(client: httpx.AsyncClient) -> None:
     )
     tournament_id = response.json()["id"]
     response = await client.post(
-        "/v1/round/create",
+        "/api/v1/round/create",
         json={
             "name": ROUND_NAME,
             "tournament_id": tournament_id,
@@ -320,16 +320,16 @@ async def test_api_motion_list_offset(client: httpx.AsyncClient) -> None:
     )
     round_id = response.json()["id"]
     _ = await client.post(
-        "/v1/motion/create",
+        "/api/v1/motion/create",
         json={"round_id": round_id, "text": "First", "infoslide": None},
     )
     response = await client.post(
-        "/v1/motion/create",
+        "/api/v1/motion/create",
         json={"round_id": round_id, "text": "Last", "infoslide": None},
     )
     last_motion_id = response.json()["id"]
 
-    response = await client.get("/v1/motion/", params={"offset": 1})
+    response = await client.get("/api/v1/motion/", params={"offset": 1})
     assert len(response.json()) == 1
     assert response.json()[0]["id"] == last_motion_id
     assert response.json()[0]["text"] == "Last"
@@ -354,7 +354,7 @@ async def test_motion_list_limit(
     expect_n: int,
 ) -> None:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": TOURNAMENT_NAME,
             "abbreviation": TOURNAMENT_ABBREVIATION,
@@ -362,7 +362,7 @@ async def test_motion_list_limit(
     )
     tournament_id = response.json()["id"]
     response = await client.post(
-        "/v1/round/create",
+        "/api/v1/round/create",
         json={
             "name": ROUND_NAME,
             "tournament_id": tournament_id,
@@ -373,14 +373,14 @@ async def test_motion_list_limit(
     round_id = response.json()["id"]
     for idx in range(insert_n):
         _ = await client.post(
-            "/v1/motion/create",
+            "/api/v1/motion/create",
             json={
                 "round_id": round_id,
                 "text": f"Motion {idx}",
                 "infoslide": None,
             },
         )
-    response = await client.get("/v1/motion/", params={"limit": limit})
+    response = await client.get("/api/v1/motion/", params={"limit": limit})
     assert len(response.json()) == expect_n
 
 
@@ -415,7 +415,7 @@ async def test_motion_list_text_filter(
     expect_texts: list[str],
 ) -> None:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": TOURNAMENT_NAME,
             "abbreviation": TOURNAMENT_ABBREVIATION,
@@ -423,7 +423,7 @@ async def test_motion_list_text_filter(
     )
     tournament_id = response.json()["id"]
     response = await client.post(
-        "/v1/round/create",
+        "/api/v1/round/create",
         json={
             "name": ROUND_NAME,
             "tournament_id": tournament_id,
@@ -434,31 +434,31 @@ async def test_motion_list_text_filter(
     round_id = response.json()["id"]
     for text in insert_texts:
         _ = await client.post(
-            "/v1/motion/create",
+            "/api/v1/motion/create",
             json={
                 "round_id": round_id,
                 "text": text,
                 "infoslide": None,
             },
         )
-    response = await client.get("/v1/motion/", params={"text": text_filter})
+    response = await client.get("/api/v1/motion/", params={"text": text_filter})
     texts = [motion["text"] for motion in response.json()]
     assert texts == expect_texts
 
 
 @pytest.mark.asyncio
 async def test_api_motion_get_missing(client: httpx.AsyncClient) -> None:
-    response = await client.get("/v1/motion/1")
+    response = await client.get("/api/v1/motion/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_api_motion_delete_missing(client: httpx.AsyncClient) -> None:
-    response = await client.delete("/v1/motion/1")
+    response = await client.delete("/api/v1/motion/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.asyncio
 async def test_api_motion_patch_missing(client: httpx.AsyncClient) -> None:
-    response = await client.patch("/v1/motion/1", json={"text": "Missing"})
+    response = await client.patch("/api/v1/motion/1", json={"text": "Missing"})
     assert response.status_code == http.HTTPStatus.NOT_FOUND

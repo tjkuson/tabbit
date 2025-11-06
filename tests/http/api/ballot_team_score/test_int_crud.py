@@ -18,7 +18,7 @@ SCORE: Final = 3
 
 async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int, int]:
     response = await client.post(
-        "/v1/tournaments/create",
+        "/api/v1/tournaments/create",
         json={
             "name": TOURNAMENT_NAME,
             "abbreviation": TOURNAMENT_ABBREVIATION,
@@ -28,7 +28,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int, in
     assert isinstance(tournament_id, int)
 
     response = await client.post(
-        "/v1/team/create",
+        "/api/v1/team/create",
         json={
             "name": TEAM_NAME,
             "tournament_id": tournament_id,
@@ -38,7 +38,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int, in
     assert isinstance(team_id, int)
 
     response = await client.post(
-        "/v1/judge/create",
+        "/api/v1/judge/create",
         json={
             "name": JUDGE_NAME,
             "tournament_id": tournament_id,
@@ -48,7 +48,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int, in
     assert isinstance(judge_id, int)
 
     response = await client.post(
-        "/v1/round/create",
+        "/api/v1/round/create",
         json={
             "name": ROUND_NAME,
             "abbreviation": ROUND_ABBREVIATION,
@@ -61,7 +61,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int, in
     assert isinstance(round_id, int)
 
     response = await client.post(
-        "/v1/debate/create",
+        "/api/v1/debate/create",
         json={
             "round_id": round_id,
         },
@@ -70,7 +70,7 @@ async def _setup_data(client: httpx.AsyncClient) -> tuple[int, int, int, int, in
     assert isinstance(debate_id, int)
 
     response = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id,
             "judge_id": judge_id,
@@ -89,7 +89,7 @@ async def test_api_ballot_team_score_create(client: httpx.AsyncClient) -> None:
         client
     )
     response = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id,
             "team_id": team_id,
@@ -105,7 +105,7 @@ async def test_api_ballot_team_score_read(client: httpx.AsyncClient) -> None:
         client
     )
     response = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id,
             "team_id": team_id,
@@ -113,7 +113,7 @@ async def test_api_ballot_team_score_read(client: httpx.AsyncClient) -> None:
         },
     )
     ballot_team_score_id = response.json()["id"]
-    response = await client.get(f"/v1/ballot-team-score/{ballot_team_score_id}")
+    response = await client.get(f"/api/v1/ballot-team-score/{ballot_team_score_id}")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json() == {
         "id": ballot_team_score_id,
@@ -129,7 +129,7 @@ async def test_api_ballot_team_score_delete(client: httpx.AsyncClient) -> None:
         client
     )
     response = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id,
             "team_id": team_id,
@@ -137,11 +137,11 @@ async def test_api_ballot_team_score_delete(client: httpx.AsyncClient) -> None:
         },
     )
     ballot_team_score_id = response.json()["id"]
-    response = await client.delete(f"/v1/ballot-team-score/{ballot_team_score_id}")
+    response = await client.delete(f"/api/v1/ballot-team-score/{ballot_team_score_id}")
     assert response.status_code == http.HTTPStatus.NO_CONTENT
 
     # Check the deleted ballot team score cannot be found.
-    response = await client.get(f"/v1/ballot-team-score/{ballot_team_score_id}")
+    response = await client.get(f"/api/v1/ballot-team-score/{ballot_team_score_id}")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
@@ -149,7 +149,7 @@ async def test_api_ballot_team_score_delete(client: httpx.AsyncClient) -> None:
 async def test_api_ballot_team_score_list_empty(
     client: httpx.AsyncClient,
 ) -> None:
-    response = await client.get("/v1/ballot-team-score/")
+    response = await client.get("/api/v1/ballot-team-score/")
     assert response.status_code == http.HTTPStatus.OK
     assert response.json() == []
 
@@ -160,7 +160,7 @@ async def test_api_ballot_team_score_list(client: httpx.AsyncClient) -> None:
         client
     )
     response = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id,
             "team_id": team_id,
@@ -168,7 +168,7 @@ async def test_api_ballot_team_score_list(client: httpx.AsyncClient) -> None:
         },
     )
     ballot_team_score_id = response.json()["id"]
-    response = await client.get("/v1/ballot-team-score/")
+    response = await client.get("/api/v1/ballot-team-score/")
     assert response.json() == [
         {
             "id": ballot_team_score_id,
@@ -186,7 +186,7 @@ async def test_api_ballot_team_score_list_offset(
     tournament_id, team_id, ballot_id, _judge_id, _debate_id = await _setup_data(client)
 
     response = await client.post(
-        "/v1/team/create",
+        "/api/v1/team/create",
         json={
             "name": "Team Beta",
             "tournament_id": tournament_id,
@@ -195,7 +195,7 @@ async def test_api_ballot_team_score_list_offset(
     team_id_2 = response.json()["id"]
 
     _ = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id,
             "team_id": team_id,
@@ -203,7 +203,7 @@ async def test_api_ballot_team_score_list_offset(
         },
     )
     response = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id,
             "team_id": team_id_2,
@@ -211,7 +211,7 @@ async def test_api_ballot_team_score_list_offset(
         },
     )
     last_ballot_team_score_id = response.json()["id"]
-    response = await client.get("/v1/ballot-team-score/", params={"offset": 1})
+    response = await client.get("/api/v1/ballot-team-score/", params={"offset": 1})
     assert response.json() == [
         {
             "id": last_ballot_team_score_id,
@@ -244,7 +244,7 @@ async def test_ballot_team_score_list_limit(
 
     for idx in range(insert_n):
         response = await client.post(
-            "/v1/team/create",
+            "/api/v1/team/create",
             json={
                 "name": f"Team {idx}",
                 "tournament_id": tournament_id,
@@ -252,14 +252,14 @@ async def test_ballot_team_score_list_limit(
         )
         team_id = response.json()["id"]
         _ = await client.post(
-            "/v1/ballot-team-score/create",
+            "/api/v1/ballot-team-score/create",
             json={
                 "ballot_id": ballot_id,
                 "team_id": team_id,
                 "score": 3 - idx,
             },
         )
-    response = await client.get("/v1/ballot-team-score/", params={"limit": limit})
+    response = await client.get("/api/v1/ballot-team-score/", params={"limit": limit})
     assert len(response.json()) == expect_n
 
 
@@ -271,7 +271,7 @@ async def test_api_ballot_team_score_list_filter_ballot_id(
         client
     )
     response = await client.post(
-        "/v1/ballot/create",
+        "/api/v1/ballot/create",
         json={
             "debate_id": debate_id,
             "judge_id": judge_id,
@@ -281,7 +281,7 @@ async def test_api_ballot_team_score_list_filter_ballot_id(
     ballot_id_2 = response.json()["id"]
 
     ballot_team_score_id_1 = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id_1,
             "team_id": team_id,
@@ -291,7 +291,7 @@ async def test_api_ballot_team_score_list_filter_ballot_id(
     ballot_team_score_id_1 = ballot_team_score_id_1.json()["id"]
 
     ballot_team_score_id_2 = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id_2,
             "team_id": team_id,
@@ -301,7 +301,7 @@ async def test_api_ballot_team_score_list_filter_ballot_id(
     ballot_team_score_id_2 = ballot_team_score_id_2.json()["id"]
 
     response = await client.get(
-        "/v1/ballot-team-score/",
+        "/api/v1/ballot-team-score/",
         params={"ballot_id": ballot_id_1},
     )
     assert len(response.json()) == 1
@@ -309,7 +309,7 @@ async def test_api_ballot_team_score_list_filter_ballot_id(
     assert response.json()[0]["ballot_id"] == ballot_id_1
 
     response = await client.get(
-        "/v1/ballot-team-score/",
+        "/api/v1/ballot-team-score/",
         params={"ballot_id": ballot_id_2},
     )
     assert len(response.json()) == 1
@@ -325,7 +325,7 @@ async def test_api_ballot_team_score_list_filter_team_id(
         client
     )
     response = await client.post(
-        "/v1/team/create",
+        "/api/v1/team/create",
         json={
             "name": "Team Beta",
             "tournament_id": tournament_id,
@@ -334,7 +334,7 @@ async def test_api_ballot_team_score_list_filter_team_id(
     team_id_2 = response.json()["id"]
 
     ballot_team_score_id_1 = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id,
             "team_id": team_id_1,
@@ -344,7 +344,7 @@ async def test_api_ballot_team_score_list_filter_team_id(
     ballot_team_score_id_1 = ballot_team_score_id_1.json()["id"]
 
     ballot_team_score_id_2 = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id,
             "team_id": team_id_2,
@@ -354,7 +354,7 @@ async def test_api_ballot_team_score_list_filter_team_id(
     ballot_team_score_id_2 = ballot_team_score_id_2.json()["id"]
 
     response = await client.get(
-        "/v1/ballot-team-score/",
+        "/api/v1/ballot-team-score/",
         params={"team_id": team_id_1},
     )
     assert len(response.json()) == 1
@@ -362,7 +362,7 @@ async def test_api_ballot_team_score_list_filter_team_id(
     assert response.json()[0]["team_id"] == team_id_1
 
     response = await client.get(
-        "/v1/ballot-team-score/",
+        "/api/v1/ballot-team-score/",
         params={"team_id": team_id_2},
     )
     assert len(response.json()) == 1
@@ -374,7 +374,7 @@ async def test_api_ballot_team_score_list_filter_team_id(
 async def test_api_ballot_team_score_get_missing(
     client: httpx.AsyncClient,
 ) -> None:
-    response = await client.get("/v1/ballot-team-score/1")
+    response = await client.get("/api/v1/ballot-team-score/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
@@ -382,7 +382,7 @@ async def test_api_ballot_team_score_get_missing(
 async def test_api_ballot_team_score_delete_missing(
     client: httpx.AsyncClient,
 ) -> None:
-    response = await client.delete("/v1/ballot-team-score/1")
+    response = await client.delete("/api/v1/ballot-team-score/1")
     assert response.status_code == http.HTTPStatus.NOT_FOUND
 
 
@@ -396,7 +396,7 @@ async def test_api_ballot_team_score_create_duplicate_ballot_team(
 
     # Create first ballot team score
     response = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id,
             "team_id": team_id,
@@ -407,7 +407,7 @@ async def test_api_ballot_team_score_create_duplicate_ballot_team(
 
     # Attempt to create duplicate ballot team score with same ballot and team
     response = await client.post(
-        "/v1/ballot-team-score/create",
+        "/api/v1/ballot-team-score/create",
         json={
             "ballot_id": ballot_id,
             "team_id": team_id,
