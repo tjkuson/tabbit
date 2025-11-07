@@ -111,10 +111,9 @@ async def test_api_tag_create_duplicate_name_same_tournament(
         },
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
-    assert (
-        response.json()["message"]
-        == "A tag with this name already exists in this tournament"
-    )
+    assert response.json() == {
+        "message": "A tag with this name already exists in this tournament"
+    }
 
 
 @pytest.mark.asyncio
@@ -419,9 +418,9 @@ async def test_api_tag_add_speakers_duplicate(client: httpx.AsyncClient) -> None
         json={"speaker_ids": [speaker_id]},
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
-    assert (
-        response.json()["message"] == "This speaker is already associated with this tag"
-    )
+    assert response.json() == {
+        "message": "This speaker is already associated with this tag"
+    }
 
 
 @pytest.mark.asyncio
@@ -568,9 +567,9 @@ async def test_api_tag_add_judges_duplicate(client: httpx.AsyncClient) -> None:
         json={"judge_ids": [judge_id]},
     )
     assert response.status_code == http.HTTPStatus.CONFLICT
-    assert (
-        response.json()["message"] == "This judge is already associated with this tag"
-    )
+    assert response.json() == {
+        "message": "This judge is already associated with this tag"
+    }
 
 
 @pytest.mark.asyncio

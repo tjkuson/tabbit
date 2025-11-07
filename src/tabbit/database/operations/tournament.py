@@ -9,6 +9,28 @@ from tabbit.database.schemas.tournament import TournamentPatch
 from tabbit.sentinel import Unset
 
 
+def _generate_slug(
+    name: str,
+    abbreviation: str | None,
+    provided_slug: str | None,
+) -> str:
+    """Generate a slug from tournament name and abbreviation.
+
+    Args:
+        name: The tournament name.
+        abbreviation: The tournament abbreviation.
+        provided_slug: The provided slug.
+
+    Returns:
+        The slug to use.
+    """
+    if provided_slug is not None:
+        return provided_slug
+    if abbreviation is not None:
+        return abbreviation.lower().replace(" ", "")
+    return name.lower().replace(" ", "")
+
+
 async def create_tournament(
     session: AsyncSession,
     tournament_create: TournamentCreate,
@@ -22,9 +44,15 @@ async def create_tournament(
     Returns:
         The ID of the created tournament.
     """
+    slug = _generate_slug(
+        tournament_create.name,
+        tournament_create.abbreviation,
+        tournament_create.slug,
+    )
     tournament_model = models.Tournament(
         name=tournament_create.name,
         abbreviation=tournament_create.abbreviation,
+        slug=slug,
     )
     session.add(tournament_model)
     await session.commit()
@@ -52,6 +80,7 @@ async def get_tournament(
             id=tournament_model.id,
             name=tournament_model.name,
             abbreviation=tournament_model.abbreviation,
+            slug=tournament_model.slug,
         )
 
 
@@ -102,12 +131,15 @@ async def patch_tournament(
         tournament_model.name = tournament_patch.name
     if tournament_patch.abbreviation is not Unset:
         tournament_model.abbreviation = tournament_patch.abbreviation
+    if tournament_patch.slug is not Unset:
+        tournament_model.slug = tournament_patch.slug
 
     await session.commit()
     return Tournament(
         id=tournament_model.id,
         name=tournament_model.name,
         abbreviation=tournament_model.abbreviation,
+        slug=tournament_model.slug,
     )
 
 
@@ -141,6 +173,34 @@ async def list_tournaments(
             id=tournament.id,
             name=tournament.name,
             abbreviation=tournament.abbreviation,
+            slug=tournament.slug,
         )
         for tournament in tournaments
     ]
+
+
+async def get_tournament_by_slug(
+    session: AsyncSession,
+    slug: str,
+) -> Tournament | None:
+    """Get a tournament via its slug.
+
+    Args:
+        session: The database session to use for the operation.
+        slug: The slug of the tournament to retrieve.
+
+    Returns:
+        The tournament if found, None otherwise.
+    """
+    query = select(models.Tournament).where(models.Tournament.slug == slug)
+    result = await session.execute(query)
+    tournament_model = result.scalar_one_or_none()
+    if tournament_model is None:
+        return None
+    else:
+        return Tournament(
+            id=tournament_model.id,
+            name=tournament_model.name,
+            abbreviation=tournament_model.abbreviation,
+            slug=tournament_model.slug,
+        )
