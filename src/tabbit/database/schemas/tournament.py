@@ -12,6 +12,7 @@ class TournamentCreate:
 
     name: str
     abbreviation: str | None = None
+    slug: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +22,7 @@ class Tournament:
     id: int
     name: str
     abbreviation: str | None
+    slug: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,6 +31,7 @@ class TournamentPatch:
 
     name: str | UnsetT = Unset
     abbreviation: str | None | UnsetT = Unset
+    slug: str | UnsetT = Unset
 
 
 @dataclass(frozen=True, slots=True)

@@ -31,6 +31,10 @@ _UNIQUE_CONSTRAINT_PATTERNS: Final = (
         "judge_tag.judge_id, judge_tag.tag_id",
         "This judge is already associated with this tag",
     ),
+    (
+        "tournament.slug",
+        "A tournament with this slug already exists",
+    ),
 )
 _UNIQUE_CONSTRAINT_MESSAGES: Final = {
     f"UNIQUE constraint failed: {key}": value

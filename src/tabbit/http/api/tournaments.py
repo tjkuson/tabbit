@@ -9,14 +9,18 @@ from fastapi import Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tabbit.database.operations import tournament as crud
 from tabbit.database.schemas import tournament as db_schemas
 from tabbit.database.session import session_manager
+from tabbit.http.api.constraint_messages import get_constraint_violation_message
 from tabbit.http.api.enums import Tags
+from tabbit.http.api.responses import conflict_response
 from tabbit.http.api.responses import not_found_response
 from tabbit.http.api.schemas.tournament import ListTournamentsQuery
+from tabbit.http.api.schemas.tournament import SlugStr
 from tabbit.http.api.schemas.tournament import Tournament
 from tabbit.http.api.schemas.tournament import TournamentCreate
 from tabbit.http.api.schemas.tournament import TournamentID
@@ -33,6 +37,7 @@ tournaments_router: Final = APIRouter(
 @tournaments_router.post(
     "/create",
     response_model=TournamentID,
+    responses=conflict_response("A tournament with this slug already exists"),
 )
 async def create_tournament(
     tournament: TournamentCreate,
@@ -43,11 +48,46 @@ async def create_tournament(
     Returns the tournament ID upon creation.
     """
     db_tournament = db_schemas.TournamentCreate(**tournament.model_dump())
-    tournament_id = TournamentID(
-        id=await crud.create_tournament(session, db_tournament)
-    )
+    try:
+        tournament_id = TournamentID(
+            id=await crud.create_tournament(session, db_tournament)
+        )
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={"message": message},
+        )
     logger.info("Created tournament.", extra={"tournament_id": tournament_id})
     return JSONResponse(content=jsonable_encoder(tournament_id))
+
+
+@tournaments_router.get(
+    "/by-slug/{slug}",
+    response_model=Tournament,
+    responses=not_found_response("tournament"),
+)
+async def get_tournament_by_slug(
+    slug: SlugStr,
+    session: Annotated[AsyncSession, Depends(session_manager.session)],
+) -> JSONResponse:
+    """Get a tournament using its slug.
+
+    Returns the tournament if found; otherwise, 404 Not Found.
+    """
+    db_tournament = await crud.get_tournament_by_slug(session, slug)
+
+    if db_tournament is None:
+        logger.info("Tournament not found.", extra={"slug": slug})
+        return JSONResponse(
+            status_code=http.HTTPStatus.NOT_FOUND,
+            content={"message": "Tournament not found."},
+        )
+    else:
+        tournament = Tournament.model_validate(db_tournament)
+        logger.info("Got tournament by slug.", extra={"slug": slug})
+        return JSONResponse(content=jsonable_encoder(tournament))
 
 
 @tournaments_router.get(
@@ -106,7 +146,8 @@ async def delete_tournament(
 @tournaments_router.patch(
     "/{tournament_id}",
     response_model=Tournament,
-    responses=not_found_response("tournament"),
+    responses=not_found_response("tournament")
+    | conflict_response("A tournament with this slug already exists"),
 )
 async def patch_tournament(
     tournament_id: int,
@@ -119,7 +160,15 @@ async def patch_tournament(
     """
     patch_data = tournament_patch.model_dump(exclude_unset=True)
     db_patch = db_schemas.TournamentPatch(**patch_data)
-    db_tournament = await crud.patch_tournament(session, tournament_id, db_patch)
+    try:
+        db_tournament = await crud.patch_tournament(session, tournament_id, db_patch)
+    except IntegrityError as exc:
+        logger.warning("Constraint violation.", exc_info=exc)
+        message = get_constraint_violation_message(exc)
+        return JSONResponse(
+            status_code=http.HTTPStatus.CONFLICT,
+            content={"message": message},
+        )
 
     if db_tournament is None:
         logger.info(

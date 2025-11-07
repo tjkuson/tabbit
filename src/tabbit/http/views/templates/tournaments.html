@@ -12,6 +12,7 @@
             <tr>
                 <th>ID</th>
                 <th>Name</th>
+                <th>Slug</th>
                 <th>Abbreviation</th>
             </tr>
         </thead>
@@ -20,6 +21,7 @@
             <tr>
                 <td>{{ tournament.id }}</td>
                 <td>{{ tournament.name }}</td>
+                <td>{{ tournament.slug }}</td>
                 <td>{{ tournament.abbreviation if tournament.abbreviation else '' }}</td>
             </tr>
             {% endfor %}

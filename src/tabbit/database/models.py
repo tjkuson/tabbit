@@ -25,10 +25,12 @@ class Base(DeclarativeBase):
 @final
 class Tournament(Base):
     __tablename__ = TableName.TOURNAMENT
+    __table_args__ = (UniqueConstraint("slug", name="uq_tournament_slug"),)
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str]
     abbreviation: Mapped[str | None]
+    slug: Mapped[str]
 
     judges: Mapped[list[Judge]] = relationship(
         back_populates="tournament",
